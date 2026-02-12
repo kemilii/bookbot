@@ -1,0 +1,14 @@
+# Environment
+.env
+__pycache__/
+*.pyc
+
+# Logs
+bookbot.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
