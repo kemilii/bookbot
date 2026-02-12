@@ -6,13 +6,13 @@ A CLI book recommendation assistant powered by OpenAI. Tell BookBot your favorit
 
 BookBot uses a **5-layer pipeline** to turn user preferences into validated recommendations:
 
-| Layer | Module | Responsibility |
-|-------|--------|----------------|
-| 1 — Input Validation | `cli.py` | Collects & sanitizes user preferences (genres, books, familiarity) with prompt-injection detection |
-| 2 — Prompt Construction | `recommender.py` | Builds system + user prompts from validated preferences |
-| 3 — LLM Call | `recommender.py` | Sends prompts to OpenAI with retry logic |
-| 4 — Output Parsing | `recommender.py` | Extracts JSON from raw LLM text (handles fences, trailing commas, etc.) |
-| 5 — Business Validation | `recommender.py` | Validates fields, types, year ranges, deduplicates, enforces 3-5 results |
+| Layer | Purpose |
+|-------|---------|
+| 1. Input Validation | Collects user preferences interactively — genre selection (1–3 from 7 allowed genres), favorite books (2–3 titles), and a familiarity/adventurousness level (1–4 scale). Includes prompt-injection detection via regex patterns and input sanitization. |
+| 2. Prompt Construction | Builds a system prompt (personality + strict JSON output format) and a user prompt from validated preferences. |
+| 3. LLM Call | Sends the prompt to OpenAI with retry logic (up to 3 attempts), handling empty responses and API exceptions. |
+| 4. Output Parsing | Robust JSON extraction — handles raw JSON, markdown-fenced JSON, trailing commas, and nested brace extraction. |
+| 5. Business Validation | Validates each recommendation (required fields, type checks, publication year 1450–2026, explanation length bounds), deduplicates by title, and enforces 3–5 results. |
 
 ```
 bookbot/
