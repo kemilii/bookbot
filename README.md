@@ -1,6 +1,6 @@
 # BookBot
 
-A CLI book recommendation assistant powered by OpenAI. Tell BookBot your favorite genres, a few books you love, and how adventurous you're feeling — it'll suggest 3-5 personalized picks.
+A CLI book recommendation assistant powered by OpenAI. Tell BookBot your favorite genres, a few books you love, and how adventurous you're feeling — it'll suggest 3–5 personalized picks. Supports **English** and **Chinese (中文)**.
 
 ## Architecture
 
@@ -8,18 +8,20 @@ BookBot uses a **5-layer pipeline** to turn user preferences into validated reco
 
 | Layer | Purpose |
 |-------|---------|
-| 1. Input Validation | Collects user preferences interactively — genre selection (1–3 from 7 allowed genres), favorite books (2–3 titles), and a familiarity/adventurousness level (1–4 scale). Includes prompt-injection detection via regex patterns and input sanitization. |
-| 2. Prompt Construction | Builds a system prompt (personality + strict JSON output format) and a user prompt from validated preferences. |
-| 3. LLM Call | Sends the prompt to OpenAI with retry logic (up to 3 attempts), handling empty responses and API exceptions. |
+| 0. Language Selection | Prompts the user to choose English or Chinese at startup. All subsequent prompts, messages, and LLM output adapt to the selected language. |
+| 1. Input Validation | Collects user preferences interactively — genre selection (1–3 from 7 allowed genres), favorite books (2–3 titles), and a familiarity/adventurousness level (1–4 scale). Includes prompt-injection detection via regex patterns and input sanitization. Accepts Chinese characters in book titles and Chinese commas (`，`) as separators. |
+| 2. Prompt Construction | Builds a language-appropriate system prompt and a user prompt from validated preferences. On subsequent rounds, appends an exclusion list of previously recommended titles. |
+| 3. LLM Call | Sends the prompt to OpenAI (`gpt-4o-mini`) with retry logic (up to 3 attempts), handling empty responses and API exceptions. |
 | 4. Output Parsing | Robust JSON extraction — handles raw JSON, markdown-fenced JSON, trailing commas, and nested brace extraction. |
-| 5. Business Validation | Validates each recommendation (required fields, type checks, publication year 1450–2026, explanation length bounds), deduplicates by title, and enforces 3–5 results. |
+| 5. Business Validation | Validates each recommendation (required fields, type checks, publication year 1450–2026, explanation length bounds), deduplicates by title, and enforces 3–5 results. Filters out any titles that were already recommended in previous rounds. If all results are duplicates, silently retries the LLM. |
 
 ```
 bookbot/
 ├── __init__.py        # package init, logging config
 ├── __main__.py        # python -m bookbot entry point
-├── cli.py             # Layer 1 + display + main loop
-└── recommender.py     # Layers 2-5 (the engine)
+├── i18n.py            # internationalization (English + Chinese strings, genre mappings)
+├── cli.py             # language selection, Layer 1, display, duplicate check, main loop
+└── recommender.py     # Layers 2-5 (prompt construction, LLM call, parsing, validation)
 ```
 
 ## Quick Start
@@ -32,17 +34,27 @@ cd bookbot
 # 2. Install dependencies
 pip install -r requirements.txt
 
-# 4. Set up your API key
+# 3. Set up your API key
 cp .env.example .env
 # Edit .env and paste your OpenAI API key
 
-# 5. Run BookBot
+# 4. Run BookBot
 python -m bookbot
 ```
+
+On launch you'll see:
+
+```
+Choose your language / 选择语言:
+  1 = English
+  2 = 中文
+Enter 1 or 2 / 输入 1 或 2:
+```
+
+After choosing a language, BookBot walks you through genre selection, favorite books, and familiarity level, then returns 3–5 personalized recommendations. You can ask for more rounds — previously recommended books are automatically excluded.
 
 ## Configuration
 
 | Variable | Description |
 |----------|-------------|
 | `OPENAI_API_KEY` | Your OpenAI API key (required) |
-
