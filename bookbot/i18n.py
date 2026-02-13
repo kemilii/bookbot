@@ -43,6 +43,8 @@ GENRE_DISPLAY: dict[str, dict[str, str]] = {
         "romance": "romance",
         "nonfiction": "nonfiction",
         "historical": "historical",
+        "feminism": "feminism",
+        "psychology": "psychology",
     },
     "zh": {
         "science fiction": "科幻",
@@ -52,6 +54,8 @@ GENRE_DISPLAY: dict[str, dict[str, str]] = {
         "romance": "爱情",
         "nonfiction": "非虚构",
         "historical": "历史",
+        "feminism": "女性主义",
+        "psychology": "心理学",
     },
 }
 
