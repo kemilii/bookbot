@@ -5,6 +5,11 @@ import re
 
 from flask import Flask, render_template, request, jsonify
 
+from bookbot.database import (
+    init_db,
+    add_subscription,
+    deactivate_subscription,
+)
 from bookbot.i18n import (
     set_language,
     get_language,
@@ -21,6 +26,7 @@ from bookbot.recommender import (
     parse_llm_output,
     validate_recommendations,
 )
+from bookbot.scheduler import start_scheduler
 
 app = Flask(__name__)
 
@@ -181,13 +187,103 @@ def api_recommend():
 
 
 # ---------------------------------------------------------------------------
+# Subscription routes
+# ---------------------------------------------------------------------------
+_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+@app.route("/api/subscribe", methods=["POST"])
+def api_subscribe():
+    """Subscribe to monthly recommendations.
+
+    Expected JSON body:
+    {
+        "email": "user@example.com",
+        "language": "en" | "zh",
+        "genres": ["science fiction", "fantasy"],
+        "books": ["Book One", "Book Two"],
+        "familiarity": 1-4
+    }
+    """
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({"error": "Invalid request body"}), 400
+
+    # --- Email ---
+    email = (data.get("email") or "").strip().lower()
+    if not email or not _EMAIL_RE.match(email):
+        return jsonify({"error": t("sub_email_invalid")}), 400
+
+    # --- Language ---
+    lang = data.get("language", "en")
+    if lang not in ("en", "zh"):
+        return jsonify({"error": "Unsupported language"}), 400
+    set_language(lang)
+
+    # --- Genres ---
+    genres_raw = data.get("genres", [])
+    if not isinstance(genres_raw, list) or not (1 <= len(genres_raw) <= 3):
+        return jsonify({"error": t("genre_count")}), 400
+
+    internal_genres = []
+    for g in genres_raw:
+        mapped = lookup_genre(g)
+        if mapped is None:
+            return jsonify({"error": f"Unknown genre: {g}"}), 400
+        internal_genres.append(mapped)
+
+    if len(internal_genres) != len(set(internal_genres)):
+        return jsonify({"error": t("genre_dup")}), 400
+
+    # --- Books ---
+    books = data.get("books", [])
+    if not isinstance(books, list) or not (2 <= len(books) <= 3):
+        return jsonify({"error": t("book_count")}), 400
+
+    for b in books:
+        if not _is_valid_book_title(b):
+            return jsonify({"error": f"Invalid book title: {b}"}), 400
+        if _contains_prompt_injection(b):
+            return jsonify({"error": t("book_injection")}), 400
+
+    # --- Familiarity ---
+    familiarity = data.get("familiarity")
+    try:
+        familiarity = int(familiarity)
+    except (TypeError, ValueError):
+        return jsonify({"error": t("fam_nan")}), 400
+    if familiarity not in FAMILIARITY_MAP:
+        return jsonify({"error": t("fam_range")}), 400
+
+    # --- Persist ---
+    try:
+        token = add_subscription(email, lang, internal_genres, books, familiarity)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 409
+
+    logging.info("Subscription created for %s", email)
+    return jsonify({"message": t("sub_success", email=email), "token": token}), 201
+
+
+@app.route("/api/unsubscribe/<token>")
+def api_unsubscribe(token):
+    """Unsubscribe using a unique token."""
+    success = deactivate_subscription(token)
+    if success:
+        return render_template("unsubscribe.html", success=True)
+    return render_template("unsubscribe.html", success=False), 404
+
+
+# ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
 def run():
     """Start the Flask development server."""
+    init_db()
+    start_scheduler()
     print("\n  BookBot Web UI starting...")
     print("  Open http://127.0.0.1:8000 in your browser\n")
-    app.run(debug=True, port=8000)
+    app.run(debug=True, port=8000, use_reloader=False)
 
 
 if __name__ == "__main__":
