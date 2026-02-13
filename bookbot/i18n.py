@@ -137,6 +137,17 @@ STRINGS: dict[str, dict[str, str]] = {
         "more_yes":         "\nGood choice! Let me dig up more...\n",
         "more_no":          "\nHappy reading! Come back any time you need a fresh stack :D",
         "more_invalid":     "Please type 'yes' or 'no'.",
+
+        # Subscription
+        "sub_tab":          "Subscribe",
+        "sub_title":        "Monthly recommendations",
+        "sub_desc":         "Get personalized book picks delivered to your inbox every month.",
+        "sub_email_label":  "Your email",
+        "sub_email_placeholder": "you@example.com",
+        "sub_email_invalid": "Please enter a valid email address.",
+        "sub_submit":       "Subscribe",
+        "sub_success":      "You're subscribed! Monthly recommendations will be sent to {email}.",
+        "sub_already":      "This email is already subscribed.",
     },
 
     # ==== CHINESE ====
@@ -190,5 +201,16 @@ STRINGS: dict[str, dict[str, str]] = {
         "more_yes":         "\n好的！让我再找找...\n",
         "more_no":          "\n祝你阅读愉快！欢迎随时回来找我推荐新书 :D",
         "more_invalid":     "请输入'是'或'否'。",
+
+        # Subscription
+        "sub_tab":          "订阅",
+        "sub_title":        "每月推荐",
+        "sub_desc":         "每月为你精选好书，直接发到你的邮箱。",
+        "sub_email_label":  "你的邮箱",
+        "sub_email_placeholder": "you@example.com",
+        "sub_email_invalid": "请输入有效的邮箱地址。",
+        "sub_submit":       "订阅",
+        "sub_success":      "订阅成功！每月推荐将发送到 {email}。",
+        "sub_already":      "这个邮箱已经订阅了。",
     },
 }

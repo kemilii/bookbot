@@ -342,6 +342,81 @@
       color: var(--text);
     }
 
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 28px;
+      border-bottom: 2px solid var(--border);
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 12px 16px;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ── Subscribe form extras ── */
+    .sub-desc {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+    .form-input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 1rem;
+      font-family: inherit;
+      transition: border-color 0.15s ease;
+      background: var(--surface);
+    }
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .form-input::placeholder { color: #b5b3b0; }
+
+    .success-msg {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #166534;
+      padding: 14px 18px;
+      border-radius: var(--radius);
+      font-size: 0.95rem;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .success-msg.visible { display: block; }
+
     /* ── Error ── */
     .error-msg {
       background: #fef2f2;
@@ -368,6 +443,17 @@
       <h1>BookBot</h1>
       <p id="subtitle">Your personal book recommender</p>
     </header>
+
+    <!-- Tabs -->
+    <div class="tabs" id="main-tabs">
+      <button class="tab-btn active" id="tab-recommend" onclick="switchTab('recommend')">Get Recommendations</button>
+      <button class="tab-btn" id="tab-subscribe" onclick="switchTab('subscribe')">Subscribe</button>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TAB 1: Recommend (existing flow) -->
+    <!-- ============================================================ -->
+    <div class="tab-content active" id="panel-recommend">
 
     <!-- Progress bar -->
     <div class="progress" id="progress">
@@ -438,6 +524,81 @@
         <button class="btn-secondary" onclick="startOver()">Start over</button>
       </div>
     </div>
+
+    </div><!-- /panel-recommend -->
+
+    <!-- ============================================================ -->
+    <!-- TAB 2: Subscribe -->
+    <!-- ============================================================ -->
+    <div class="tab-content" id="panel-subscribe">
+      <div id="sub-success" class="success-msg"></div>
+      <div id="sub-error" class="error-msg"></div>
+
+      <h2 id="sub-title">Monthly recommendations</h2>
+      <p class="sub-desc" id="sub-desc">Get personalized book picks delivered to your inbox every month.</p>
+
+      <!-- Sub step 0: Language -->
+      <div class="step active" id="sub-step-0">
+        <div class="step-label" id="ss0-label">Step 1 of 5</div>
+        <h2 id="ss0-title">Choose your language</h2>
+        <button class="lang-btn" onclick="subPickLang('en')">English</button>
+        <button class="lang-btn" onclick="subPickLang('zh')">中文</button>
+      </div>
+
+      <!-- Sub step 1: Email -->
+      <div class="step" id="sub-step-1">
+        <div class="step-label" id="ss1-label">Step 2 of 5</div>
+        <div class="form-group">
+          <label class="form-label" id="sub-email-label">Your email</label>
+          <input class="form-input" type="email" id="sub-email" placeholder="you@example.com">
+        </div>
+        <button class="btn-primary" onclick="subSubmitEmail()">Continue</button>
+      </div>
+
+      <!-- Sub step 2: Genres -->
+      <div class="step" id="sub-step-2">
+        <div class="step-label" id="ss2-label">Step 3 of 5</div>
+        <h2 id="ss2-title">Pick your genres</h2>
+        <p class="chip-hint" id="ss2-hint">Select 1 to 3 genres</p>
+        <div class="genre-grid" id="sub-genre-grid"></div>
+        <button class="btn-primary" id="sub-genre-next" onclick="subSubmitGenres()">Continue</button>
+      </div>
+
+      <!-- Sub step 3: Books -->
+      <div class="step" id="sub-step-3">
+        <div class="step-label" id="ss3-label">Step 4 of 5</div>
+        <h2 id="ss3-title">Books you love</h2>
+        <p class="chip-hint" id="ss3-hint">Enter 2 to 3 of your favorite books</p>
+        <div class="book-inputs" id="sub-book-inputs">
+          <input class="book-input sub-book" type="text" placeholder="Book title..." maxlength="200">
+          <input class="book-input sub-book" type="text" placeholder="Book title..." maxlength="200">
+        </div>
+        <button class="add-book-btn" id="sub-add-book" onclick="subAddBookInput()">+ Add another book</button>
+        <div class="btn-row">
+          <button class="btn-primary" onclick="subSubmitBooks()">Continue</button>
+        </div>
+      </div>
+
+      <!-- Sub step 4: Familiarity -->
+      <div class="step" id="sub-step-4">
+        <div class="step-label" id="ss4-label">Step 5 of 5</div>
+        <h2 id="ss4-title">How adventurous are you?</h2>
+        <div id="sub-fam-options"></div>
+        <div class="btn-row">
+          <button class="btn-primary" id="sub-fam-next" onclick="subSubmitFamiliarity()">Subscribe</button>
+        </div>
+      </div>
+
+      <!-- Sub step 5: Confirmation -->
+      <div class="step" id="sub-step-done">
+        <div style="text-align:center;padding:40px 0;">
+          <div style="font-size:2rem;margin-bottom:12px;">&#10003;</div>
+          <h2 id="sub-done-title">You're subscribed!</h2>
+          <p style="color:var(--text-muted);margin-top:8px;" id="sub-done-msg"></p>
+        </div>
+      </div>
+    </div><!-- /panel-subscribe -->
+
   </div>
 
 <script>
@@ -515,7 +676,7 @@
   let currentStep = 0;
 
   function showStep(n) {
-    document.querySelectorAll(".step").forEach(s => s.classList.remove("active"));
+    document.querySelectorAll("#panel-recommend .step").forEach(s => s.classList.remove("active"));
     const target = (n === "loading") ? "step-loading"
                  : (n === "results") ? "step-results"
                  : `step-${n}`;
@@ -556,6 +717,7 @@
 
     renderGenres();
     updateLabels();
+    updateTabLabels();
     showStep(1);
   }
 
@@ -574,8 +736,8 @@
     document.getElementById("loading-text").textContent = tt("loading");
     document.getElementById("add-book").textContent = tt("add_book");
 
-    // Update book placeholders
-    document.querySelectorAll(".book-input").forEach(inp => {
+    // Update book placeholders (recommend panel only)
+    document.querySelectorAll("#book-inputs .book-input").forEach(inp => {
       inp.placeholder = tt("placeholder");
     });
 
@@ -631,7 +793,7 @@
   }
 
   function submitBooks() {
-    const inputs = document.querySelectorAll(".book-input");
+    const inputs = document.querySelectorAll("#book-inputs .book-input");
     books = [];
     inputs.forEach(inp => {
       const v = inp.value.trim();
@@ -660,7 +822,7 @@
   }
 
   function pickFam(btn, level) {
-    document.querySelectorAll(".fam-option").forEach(b => b.classList.remove("selected"));
+    document.querySelectorAll("#fam-options .fam-option").forEach(b => b.classList.remove("selected"));
     btn.classList.add("selected");
     familiarity = level;
   }
@@ -718,6 +880,10 @@
       + encodeURIComponent(query);
   }
 
+  function zlibUrl(title) {
+    return "https://zh.zlib.li/s/" + encodeURIComponent(title);
+  }
+
   function renderResults(recs) {
     const list = document.getElementById("results-list");
     list.innerHTML = "";
@@ -727,11 +893,15 @@
 
     recs.forEach((rec, i) => {
       const url = bookSearchUrl(rec.title, rec.author);
+      let titleHtml = `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(rec.title)}</a>`;
+      if (lang === "zh") {
+        titleHtml += ` &nbsp;|&nbsp; <a href="${esc(zlibUrl(rec.title))}" target="_blank" rel="noopener noreferrer" style="font-size:0.8em;opacity:0.7;">Z-Library &#8599;</a>`;
+      }
       const card = document.createElement("div");
       card.className = "rec-card";
       card.innerHTML = `
         <div class="rec-num">${labels[0]} ${i + 1}</div>
-        <div class="rec-title"><a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(rec.title)}</a></div>
+        <div class="rec-title">${titleHtml}</div>
         <div class="rec-meta">${esc(rec.author)} &middot; ${rec.publication_year}</div>
         <div class="rec-explanation">${esc(rec.explanation)}</div>
       `;
@@ -771,6 +941,285 @@
     const d = document.createElement("div");
     d.textContent = s;
     return d.innerHTML;
+  }
+
+  // ================================================================
+  // TAB SWITCHING
+  // ================================================================
+  function switchTab(tab) {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach(p => p.classList.remove("active"));
+    document.getElementById("tab-" + tab).classList.add("active");
+    document.getElementById("panel-" + tab).classList.add("active");
+
+    // Update tab labels based on language
+    updateTabLabels();
+  }
+
+  const TAB_RECOMMEND_TEXT = { en: "Get Recommendations", zh: "获取推荐" };
+
+  function updateTabLabels() {
+    const activeLang = subLang || lang || "en";
+    document.getElementById("tab-recommend").textContent = TAB_RECOMMEND_TEXT[activeLang];
+    document.getElementById("tab-subscribe").textContent = SUB_TEXT[activeLang].tab;
+  }
+
+  // ================================================================
+  // SUBSCRIBE FLOW
+  // ================================================================
+  const SUB_TEXT = {
+    en: {
+      tab: "Subscribe",
+      title: "Monthly recommendations",
+      desc: "Get personalized book picks delivered to your inbox every month.",
+      ss0_label: "Step 1 of 5", ss0_title: "Choose your language",
+      ss1_label: "Step 2 of 5", email_label: "Your email", email_placeholder: "you@example.com",
+      ss2_label: "Step 3 of 5", ss2_title: "Pick your genres", ss2_hint: "Select 1 to 3 genres",
+      ss3_label: "Step 4 of 5", ss3_title: "Books you love", ss3_hint: "Enter 2 to 3 of your favorite books",
+      ss4_label: "Step 5 of 5", ss4_title: "How adventurous are you?",
+      continue_btn: "Continue",
+      subscribe_btn: "Subscribe",
+      done_title: "You're subscribed!",
+      placeholder: "Book title...",
+      add_book: "+ Add another book",
+      fam: [
+        { label: "Play it safe", desc: "Well-known classics and bestsellers" },
+        { label: "Mostly familiar", desc: "Classics with maybe one wild card" },
+        { label: "Half and half", desc: "A mix of familiar favorites and hidden gems" },
+        { label: "Surprise me!", desc: "Unexpected, lesser-known books" },
+      ],
+      err_email: "Please enter a valid email address.",
+      err_genre: "Please select 1 to 3 genres.",
+      err_books: "Please enter 2 to 3 valid book titles.",
+      err_fam: "Please select a familiarity level.",
+      err_server: "Something went wrong. Please try again.",
+    },
+    zh: {
+      tab: "订阅",
+      title: "每月推荐",
+      desc: "每月为你精选好书，每个月1号上午9点准时发到你的邮箱。",
+      ss0_label: "第 1 步，共 5 步", ss0_title: "选择语言",
+      ss1_label: "第 2 步，共 5 步", email_label: "你的邮箱", email_placeholder: "you@example.com",
+      ss2_label: "第 3 步，共 5 步", ss2_title: "选择你喜欢的类型", ss2_hint: "选择 1 到 3 个类型",
+      ss3_label: "第 4 步，共 5 步", ss3_title: "你喜爱的书", ss3_hint: "输入 2 到 3 本你喜欢的书",
+      ss4_label: "第 5 步，共 5 步", ss4_title: "你想要多大的冒险？",
+      continue_btn: "继续",
+      subscribe_btn: "订阅",
+      done_title: "订阅成功！",
+      placeholder: "书名...",
+      add_book: "+ 再加一本",
+      fam: [
+        { label: "稳妥一点", desc: "经典和畅销书优先" },
+        { label: "基本稳妥", desc: "偶尔来个冷门" },
+        { label: "一半一半", desc: "一半熟悉一半新鲜" },
+        { label: "给我惊喜！", desc: "来点意外的冷门小众书" },
+      ],
+      err_email: "请输入有效的邮箱地址。",
+      err_genre: "请选择 1 到 3 个类型。",
+      err_books: "请输入 2 到 3 个有效书名。",
+      err_fam: "请选择一个熟悉程度。",
+      err_server: "出了点问题，请再试一次。",
+    }
+  };
+
+  function st(key) { return SUB_TEXT[subLang][key]; }
+
+  let subLang = "en";
+  let subEmail = "";
+  let subSelectedGenres = [];
+  let subBooks = [];
+  let subFamiliarity = null;
+  let subStep = 0;
+
+  function showSubStep(n) {
+    document.querySelectorAll("#panel-subscribe .step").forEach(s => s.classList.remove("active"));
+    document.getElementById("sub-step-" + n).classList.add("active");
+    hideSubError();
+    subStep = n;
+  }
+
+  function showSubError(msg) {
+    const el = document.getElementById("sub-error");
+    el.textContent = msg;
+    el.classList.add("visible");
+  }
+
+  function hideSubError() {
+    document.getElementById("sub-error").classList.remove("visible");
+    document.getElementById("sub-success").classList.remove("visible");
+  }
+
+  function updateSubLabels() {
+    document.getElementById("sub-title").textContent = st("title");
+    document.getElementById("sub-desc").textContent = st("desc");
+    document.getElementById("ss1-label").textContent = st("ss1_label");
+    document.getElementById("sub-email-label").textContent = st("email_label");
+    document.getElementById("sub-email").placeholder = st("email_placeholder");
+    document.getElementById("ss2-label").textContent = st("ss2_label");
+    document.getElementById("ss2-title").textContent = st("ss2_title");
+    document.getElementById("ss2-hint").textContent = st("ss2_hint");
+    document.getElementById("ss3-label").textContent = st("ss3_label");
+    document.getElementById("ss3-title").textContent = st("ss3_title");
+    document.getElementById("ss3-hint").textContent = st("ss3_hint");
+    document.getElementById("ss4-label").textContent = st("ss4_label");
+    document.getElementById("ss4-title").textContent = st("ss4_title");
+    document.getElementById("sub-genre-next").textContent = st("continue_btn");
+    document.getElementById("sub-fam-next").textContent = st("subscribe_btn");
+    document.getElementById("sub-add-book").textContent = st("add_book");
+    document.querySelectorAll(".sub-book").forEach(inp => {
+      inp.placeholder = st("placeholder");
+    });
+    updateTabLabels();
+  }
+
+  // Sub step 0: language
+  async function subPickLang(l) {
+    subLang = l;
+
+    // Fetch genres if not yet loaded
+    if (!genreNames.en) {
+      const res = await fetch("/api/genres");
+      const data = await res.json();
+      genreNames = { en: data.en, zh: data.zh };
+      genreInternal = data.internal;
+    }
+
+    renderSubGenres();
+    renderSubFamOptions();
+    updateSubLabels();
+    showSubStep(1);
+  }
+
+  // Sub step 1: email
+  function subSubmitEmail() {
+    const emailInput = document.getElementById("sub-email");
+    const email = emailInput.value.trim();
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRe.test(email)) {
+      showSubError(st("err_email"));
+      return;
+    }
+    subEmail = email;
+    showSubStep(2);
+  }
+
+  // Sub step 2: genres
+  function renderSubGenres() {
+    const grid = document.getElementById("sub-genre-grid");
+    grid.innerHTML = "";
+    subSelectedGenres = [];
+    const names = genreNames[subLang] || genreNames.en;
+    names.forEach(name => {
+      const chip = document.createElement("button");
+      chip.className = "genre-chip";
+      chip.textContent = name;
+      chip.onclick = () => toggleSubGenre(chip, name);
+      grid.appendChild(chip);
+    });
+  }
+
+  function toggleSubGenre(chip, name) {
+    const idx = subSelectedGenres.indexOf(name);
+    if (idx >= 0) {
+      subSelectedGenres.splice(idx, 1);
+      chip.classList.remove("selected");
+    } else {
+      if (subSelectedGenres.length >= 3) return;
+      subSelectedGenres.push(name);
+      chip.classList.add("selected");
+    }
+  }
+
+  function subSubmitGenres() {
+    if (subSelectedGenres.length < 1 || subSelectedGenres.length > 3) {
+      showSubError(st("err_genre"));
+      return;
+    }
+    showSubStep(3);
+  }
+
+  // Sub step 3: books
+  function subAddBookInput() {
+    const container = document.getElementById("sub-book-inputs");
+    if (container.children.length >= 3) return;
+    const inp = document.createElement("input");
+    inp.className = "book-input sub-book";
+    inp.type = "text";
+    inp.placeholder = st("placeholder");
+    inp.maxLength = 200;
+    container.appendChild(inp);
+    document.getElementById("sub-add-book").classList.add("hidden");
+  }
+
+  function subSubmitBooks() {
+    const inputs = document.querySelectorAll(".sub-book");
+    subBooks = [];
+    inputs.forEach(inp => {
+      const v = inp.value.trim();
+      if (v) subBooks.push(v);
+    });
+    if (subBooks.length < 2 || subBooks.length > 3) {
+      showSubError(st("err_books"));
+      return;
+    }
+    showSubStep(4);
+  }
+
+  // Sub step 4: familiarity
+  function renderSubFamOptions() {
+    const container = document.getElementById("sub-fam-options");
+    container.innerHTML = "";
+    subFamiliarity = null;
+    const opts = st("fam");
+    opts.forEach((opt, i) => {
+      const btn = document.createElement("button");
+      btn.className = "fam-option";
+      btn.innerHTML = `<span class="fam-label">${opt.label}</span><span class="fam-desc">${opt.desc}</span>`;
+      btn.onclick = () => pickSubFam(btn, i + 1);
+      container.appendChild(btn);
+    });
+  }
+
+  function pickSubFam(btn, level) {
+    document.querySelectorAll("#sub-fam-options .fam-option").forEach(b => b.classList.remove("selected"));
+    btn.classList.add("selected");
+    subFamiliarity = level;
+  }
+
+  async function subSubmitFamiliarity() {
+    if (!subFamiliarity) {
+      showSubError(st("err_fam"));
+      return;
+    }
+
+    // Submit subscription
+    try {
+      const res = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: subEmail,
+          language: subLang,
+          genres: subSelectedGenres,
+          books: subBooks,
+          familiarity: subFamiliarity,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        showSubError(data.error || st("err_server"));
+        return;
+      }
+
+      // Show confirmation
+      document.getElementById("sub-done-title").textContent = st("done_title");
+      document.getElementById("sub-done-msg").textContent = data.message;
+      showSubStep("done");
+    } catch (e) {
+      showSubError(st("err_server"));
+    }
   }
 </script>
 </body>

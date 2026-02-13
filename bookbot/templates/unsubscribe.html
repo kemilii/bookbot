@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BookBot — Unsubscribe</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      background: #faf9f7;
+      color: #2c2c2c;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 24px;
+    }
+    .card {
+      background: #ffffff;
+      border: 1px solid #e2e0dd;
+      border-radius: 10px;
+      padding: 40px 32px;
+      max-width: 440px;
+      text-align: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 12px; }
+    p { color: #6b6b6b; font-size: 1rem; line-height: 1.6; }
+    a {
+      display: inline-block;
+      margin-top: 20px;
+      color: #4f6d7a;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    {% if success %}
+      <h1>You've been unsubscribed</h1>
+      <p>You will no longer receive monthly recommendations from BookBot. We'll miss you!</p>
+    {% else %}
+      <h1>Link not found</h1>
+      <p>This unsubscribe link is invalid or has already been used.</p>
+    {% endif %}
+    <a href="/">Back to BookBot</a>
+  </div>
+</body>
+</html>
