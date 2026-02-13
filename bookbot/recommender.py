@@ -26,7 +26,7 @@ FAMILIARITY_MAP = {
 
 _SYSTEM_PROMPT_EN = """\
 Role: Act as an expert Librarian and Bibliophile with 20+ years of experience in literary curation and reader advisory. You specialize in identifying nuanced patterns in a reader’s taste to provide deeply personalized recommendations.
-Goal: Evaluate the user's provided reading preferences (genres, favorite reads and familiarity level) and recommend the 3 to 5 best books that fit their unique profile.
+Goal: Evaluate the user's provided reading preferences (genres, favorite reads and their authors, and familiarity level) and recommend the 3 to 5 best books that fit their unique profile.
 Context: This agent is part of a high-precision discovery tool where users expect both professional expertise and a conversational, welcoming tone in the explanations.
 Constraints & Requirements:
 * Accuracy: Only recommend real, published books. Do not hallucinate titles or authors.
@@ -50,7 +50,7 @@ Warnings:
 
 _SYSTEM_PROMPT_ZH = """\
 角色： 你是一位拥有 20 年经验的资深馆藏专家与图书推介人。你擅长通过读者的零散偏好，精准捕捉其潜在的审美逻辑，并提供极具个性化的深度书单 。
-任务目标： 评估用户提供的阅读偏好（流派、喜爱的书籍、熟悉程度），用中文推荐 3 到 5 本 最贴合其品位的书籍。
+任务目标： 评估用户提供的阅读偏好（流派、喜爱的书籍及其作者、熟悉程度），用中文推荐 3 到 5 本 最贴合其品位的书籍。
 约束与要求：
 * 真实性： 严禁虚构书籍或作者，所有推荐必须是已出版的真实作品。
 * 语气： explanation（推荐理由）字段必须使用亲切、自然且具有对话感的口吻，让用户觉得你是在和她/他对话。
@@ -83,20 +83,36 @@ def get_system_prompt() -> str:
 # ===================================================================
 # LAYER 2: PROMPT CONSTRUCTION
 # ===================================================================
-def build_user_prompt(prefs: dict) -> str:
-    """Build the user-side prompt from validated preferences."""
+def build_user_prompt(prefs: dict, exclude: list[str] | None = None) -> str:
+    """Build the user-side prompt from validated preferences.
+
+    *exclude* is an optional list of book titles already recommended;
+    the LLM will be told not to suggest them again.
+    """
     genres_str = ", ".join(prefs["genres"])
     books_str = ", ".join(prefs["favorite_books"])
     fam_desc = FAMILIARITY_MAP[prefs["familiarity_level"]]
 
-    return (
+    prompt = (
         f"I enjoy these genres: {genres_str}.\n"
         f"Some books I love: {books_str}.\n"
         f"For familiarity, I'd like: {fam_desc}.\n\n"
+    )
+
+    if exclude:
+        prompt += (
+            "IMPORTANT: Do NOT recommend any of these books, "
+            "which have already been suggested:\n"
+            + "\n".join(f"  - {title}" for title in exclude)
+            + "\n\n"
+        )
+
+    prompt += (
         "Please recommend 3 to 5 books as a single JSON object with key "
         '"recommendations" containing an array of objects with keys: '
         "title, author, publication_year, explanation."
     )
+    return prompt
 
 
 # ===================================================================

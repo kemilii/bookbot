@@ -233,10 +233,31 @@ def display_recommendations(recs: list[dict]) -> None:
 # ===================================================================
 # ORCHESTRATION
 # ===================================================================
-def generate_recommendations(user_prompt: str, prefs: dict) -> bool:
+def _filter_duplicates(recs: list[dict], already: list[str]) -> list[dict]:
+    """Remove recommendations whose titles have already been suggested."""
+    if not already:
+        return recs
+    seen = {title.strip().lower() for title in already}
+    filtered = [r for r in recs if r["title"].strip().lower() not in seen]
+    removed = len(recs) - len(filtered)
+    if removed:
+        logging.info("Removed %d duplicate(s) that were already recommended.", removed)
+    return filtered
+
+
+def generate_recommendations(
+    user_prompt: str,
+    prefs: dict,
+    already_recommended: list[str] | None = None,
+) -> list[dict] | None:
     """Run Layers 3-5: call LLM, parse, validate, and display.
-    Returns True on success, False if all attempts failed."""
+    Returns the list of recommendations on success, or None if all attempts failed.
+
+    *already_recommended* is a list of titles from previous rounds;
+    any duplicates are stripped from the result before display.
+    """
     system_prompt = get_system_prompt()
+    already = already_recommended or []
 
     for attempt in range(1, MAX_RETRIES + 1):
         print(t("searching"))
@@ -268,15 +289,23 @@ def generate_recommendations(user_prompt: str, prefs: dict) -> bool:
                 continue
             break
 
+        # Layer 6: Duplicate Check — remove already-recommended titles
+        final = _filter_duplicates(final, already)
+        if not final:
+            logging.warning("All recommendations were duplicates on attempt %d", attempt)
+            if attempt < MAX_RETRIES:
+                continue
+            break
+
         # Success!
         display_recommendations(final)
-        return True
+        return final
 
     # All attempts exhausted
     print(f"\n{t('fail_all')}")
     print(f"{t('fail_later')}\n")
     logging.error("All attempts exhausted. No valid recommendations produced.")
-    return False
+    return None
 
 
 def main() -> None:
@@ -288,16 +317,21 @@ def main() -> None:
     # --- Layer 1: Input Validation ---
     prefs = collect_preferences()
 
-    # --- Layer 2: Prompt Construction ---
-    user_prompt = build_user_prompt(prefs)
-    logging.info("User prompt:\n%s", user_prompt)
-
     # --- Generate, display, and offer more ---
-    while True:
-        success = generate_recommendations(user_prompt, prefs)
+    already_recommended: list[str] = []
 
-        if not success:
+    while True:
+        # --- Layer 2: Prompt Construction (rebuilt each round) ---
+        user_prompt = build_user_prompt(prefs, exclude=already_recommended or None)
+        logging.info("User prompt:\n%s", user_prompt)
+
+        recs = generate_recommendations(user_prompt, prefs, already_recommended)
+
+        if recs is None:
             break
+
+        # Track titles so the next round excludes them
+        already_recommended.extend(rec["title"] for rec in recs)
 
         # Ask if the user wants another round (exact yes/no or 是/否)
         while True:
