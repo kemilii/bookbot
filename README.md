@@ -63,7 +63,7 @@ After choosing a language, BookBot walks you through genre selection, favorite b
 
 ### Web UI
 
-Run `python -m bookbot.web` and open **http://127.0.0.1:5000** in your browser. The web interface provides a clean step-by-step wizard: pick a language, select genres, enter favorite books, choose your adventurousness level, and get recommendations displayed as cards. You can request additional rounds — previously recommended titles are automatically excluded.
+Run `python -m bookbot.web` and open **http://127.0.0.1:8000** in your browser. The web interface provides a clean step-by-step wizard: pick a language, select genres, enter favorite books, choose your adventurousness level, and get recommendations displayed as cards. Each book title is a clickable link that opens in a new tab — **Google Books** for English recommendations and **豆瓣读书 (Douban)** for Chinese recommendations — so you can quickly look up any book. You can request additional rounds — previously recommended titles are automatically excluded.
 
 ## Configuration
 

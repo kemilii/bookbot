@@ -316,6 +316,21 @@
       font-weight: 600;
       margin-bottom: 4px;
     }
+    .rec-title a {
+      color: var(--accent);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.15s ease, color 0.15s ease;
+    }
+    .rec-title a:hover {
+      color: var(--accent-hover);
+      border-bottom-color: var(--accent-hover);
+    }
+    .rec-title a::after {
+      content: " \2197";
+      font-size: 0.8em;
+      opacity: 0.5;
+    }
     .rec-meta {
       color: var(--text-muted);
       font-size: 0.9rem;
@@ -693,6 +708,16 @@
   }
 
   // ── Results ──
+  function bookSearchUrl(title, author) {
+    const query = title + " " + author;
+    if (lang === "zh") {
+      return "https://search.douban.com/book/subject_search?search_text="
+        + encodeURIComponent(query);
+    }
+    return "https://www.google.com/search?tbm=bks&q="
+      + encodeURIComponent(query);
+  }
+
   function renderResults(recs) {
     const list = document.getElementById("results-list");
     list.innerHTML = "";
@@ -701,11 +726,12 @@
       : ["Pick", "by", ""];
 
     recs.forEach((rec, i) => {
+      const url = bookSearchUrl(rec.title, rec.author);
       const card = document.createElement("div");
       card.className = "rec-card";
       card.innerHTML = `
         <div class="rec-num">${labels[0]} ${i + 1}</div>
-        <div class="rec-title">${esc(rec.title)}</div>
+        <div class="rec-title"><a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(rec.title)}</a></div>
         <div class="rec-meta">${esc(rec.author)} &middot; ${rec.publication_year}</div>
         <div class="rec-explanation">${esc(rec.explanation)}</div>
       `;
