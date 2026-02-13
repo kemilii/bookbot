@@ -119,18 +119,18 @@ def start_scheduler() -> None:
         return
 
     _scheduler = BackgroundScheduler(daemon=True)
-    # Run on the 1st of every month at 09:00 UTC
+    # TEST MODE: Run every 1 minutes
+    # TODO: Revert to monthly before deploying:
+    #   trigger="cron", day=1, hour=9, minute=0
     _scheduler.add_job(
         send_monthly_recommendations,
-        trigger="cron",
-        day=1,
-        hour=9,
-        minute=0,
+        trigger="interval",
+        minutes=1,
         id="monthly_recommendations",
         replace_existing=True,
     )
     _scheduler.start()
-    logging.info("Scheduler started — monthly job registered for the 1st of each month at 09:00 UTC")
+    logging.info("Scheduler started — job running every 1 minute (TEST MODE)")
 
 
 def stop_scheduler() -> None:
