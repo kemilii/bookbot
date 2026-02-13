@@ -3,10 +3,17 @@
 import re
 import logging
 
+from bookbot.i18n import (
+    set_language,
+    get_language,
+    t,
+    genre_display_names,
+    lookup_genre,
+)
 from bookbot.recommender import (
     FAMILIARITY_MAP,
     MAX_RETRIES,
-    SYSTEM_PROMPT,
+    get_system_prompt,
     build_user_prompt,
     call_llm,
     parse_llm_output,
@@ -16,16 +23,6 @@ from bookbot.recommender import (
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
-ALLOWED_GENRES = [
-    "science fiction",
-    "fantasy",
-    "mystery",
-    "thriller",
-    "romance",
-    "nonfiction",
-    "historical",
-]
-
 MAX_STRING_LENGTH = 200  # reject absurdly long input strings
 
 PROMPT_INJECTION_PATTERNS = [
@@ -40,6 +37,40 @@ PROMPT_INJECTION_PATTERNS = [
 ]
 
 
+def _split_by_comma(text: str) -> list[str]:
+    """Split input by the appropriate comma for the active language."""
+    if get_language() == "zh":
+        return [s.strip() for s in text.split("，") if s.strip()]
+    return [s.strip() for s in text.split(",") if s.strip()]
+
+
+def _join_by_comma(items: list[str]) -> str:
+    """Join items with the appropriate separator for the active language."""
+    if get_language() == "zh":
+        return "、".join(items)
+    return ", ".join(items)
+
+
+# ===================================================================
+# LANGUAGE SELECTION
+# ===================================================================
+def select_language() -> None:
+    """Prompt the user to pick English or Chinese at startup."""
+    while True:
+        print(t("lang_prompt"))
+        print(t("lang_option_1"))
+        print(t("lang_option_2"))
+        raw = input(t("lang_input")).strip()
+        if raw == "1":
+            set_language("en")
+            return
+        elif raw == "2":
+            set_language("zh")
+            return
+        else:
+            print(t("lang_invalid"))
+
+
 # ===================================================================
 # LAYER 1: INPUT VALIDATION
 # ===================================================================
@@ -48,7 +79,8 @@ def _is_valid_book_title(title: str) -> bool:
     if not title or len(title) > MAX_STRING_LENGTH:
         return False
     # reject strings that are only symbols / punctuation
-    if not re.search(r"[a-zA-Z0-9]", title):
+    # allow Latin letters, digits, and CJK characters
+    if not re.search(r"[a-zA-Z0-9\u4e00-\u9fff]", title):
         return False
     return True
 
@@ -64,61 +96,69 @@ def _contains_prompt_injection(text: str) -> bool:
 def validate_genres() -> list[str]:
     """Prompt the user for 1-3 genres from the allowed list.
     Re-prompts on invalid input until valid."""
+    display_names = genre_display_names()
+
     while True:
-        print(f"Pick your flavor(s): {', '.join(ALLOWED_GENRES)}")
-        raw = input("What genres do you vibe with? (1-3, comma-separated): ").strip()
+        print(t("genre_list", genres=_join_by_comma(display_names)))
+        raw = input(t("genre_prompt")).strip()
 
         if not raw:
-            print("Oops — you didn't type anything! Give me at least one genre.")
+            print(t("genre_empty"))
             continue
 
-        parts = [g.strip().lower() for g in raw.split(",") if g.strip()]
+        parts = [g.lower() for g in _split_by_comma(raw)]
 
         if len(parts) < 1 or len(parts) > 3:
-            print("Whoa there — I can handle 1 to 3 genres, no more, no less!")
+            print(t("genre_count"))
             continue
 
-        invalid = [g for g in parts if g not in ALLOWED_GENRES]
+        # Map display names to internal names
+        internal_names = []
+        invalid = []
+        for g in parts:
+            mapped = lookup_genre(g)
+            if mapped is None:
+                invalid.append(g)
+            else:
+                internal_names.append(mapped)
+
         if invalid:
-            print(f"Hmm, I don't recognize: {', '.join(invalid)}")
-            print(f"I only speak these genres: {', '.join(ALLOWED_GENRES)}")
+            print(t("genre_invalid", invalid=_join_by_comma(invalid)))
+            print(t("genre_allowed", genres=_join_by_comma(display_names)))
             continue
 
-        if len(parts) != len(set(parts)):
-            print("You listed the same genre twice — I like your enthusiasm, but let's keep them unique!")
+        if len(internal_names) != len(set(internal_names)):
+            print(t("genre_dup"))
             continue
 
-        return parts
+        return internal_names
 
 
 def validate_books() -> list[str]:
     """Prompt the user for 2-3 favorite books.
     Re-prompts on invalid input until valid."""
     while True:
-        raw = input("Name 2-3 books you absolutely love (comma-separated): ").strip()
+        raw = input(t("book_prompt")).strip()
 
         if not raw:
-            print("Oops — you didn't type anything! Tell me about some books you love.")
+            print(t("book_empty"))
             continue
 
         # Content filter: reject prompt-injection attempts
         if _contains_prompt_injection(raw):
             logging.warning("Prompt injection attempt detected: %s", raw)
-            print("Nice try, but that doesn't look like a book title to me!")
+            print(t("book_injection"))
             continue
 
-        parts = [b.strip() for b in raw.split(",") if b.strip()]
+        parts = _split_by_comma(raw)
 
         if len(parts) < 2 or len(parts) > 3:
-            print("I need exactly 2 or 3 books, no more, no less!")
+            print(t("book_count"))
             continue
 
         bad = [b for b in parts if not _is_valid_book_title(b)]
         if bad:
-            print(
-                f"Hmm, these don't look like real titles: {bad}. "
-                f"Book titles should have actual words and be under {MAX_STRING_LENGTH} characters."
-            )
+            print(t("book_invalid", bad=bad, max_len=MAX_STRING_LENGTH))
             continue
 
         return parts
@@ -128,25 +168,25 @@ def validate_familiarity() -> int:
     """Prompt the user for a familiarity preference (1-4).
     Re-prompts on invalid input until valid."""
     while True:
-        print("How adventurous are you feeling today?")
-        print("  1 = Play it safe")
-        print("  2 = Mostly classics, maybe one wild card")
-        print("  3 = Half-and-half — familiar + fresh")
-        print("  4 = Surprise me!")
-        raw = input("Pick a number (1-4): ").strip()
+        print(t("fam_header"))
+        print(t("fam_1"))
+        print(t("fam_2"))
+        print(t("fam_3"))
+        print(t("fam_4"))
+        raw = input(t("fam_prompt")).strip()
 
         if not raw:
-            print("Oops, you left that blank! Just type a number from 1 to 4.")
+            print(t("fam_empty"))
             continue
 
         try:
             choice = int(raw)
         except ValueError:
-            print("That's not a number! I need a digit between 1 and 4.")
+            print(t("fam_nan"))
             continue
 
         if choice not in FAMILIARITY_MAP:
-            print("I can only count to 4 on this one — pick 1, 2, 3, or 4.")
+            print(t("fam_range"))
             continue
 
         return choice
@@ -155,7 +195,7 @@ def validate_familiarity() -> int:
 def collect_preferences() -> dict:
     """Run all three input validators and return validated preferences."""
     print("=" * 55)
-    print("Hey there! I'm BookBot, your personal book recommender. Let's find your next read!")
+    print(t("welcome"))
     print("=" * 55, "\n")
 
     genres = validate_genres()
@@ -180,7 +220,7 @@ def collect_preferences() -> dict:
 def display_recommendations(recs: list[dict]) -> None:
     """Pretty-print the final recommendations."""
     print("\n" + "=" * 55)
-    print("Ta-da! Here are your BookBot picks:")
+    print(t("rec_header"))
     print("=" * 55)
     for i, rec in enumerate(recs, 1):
         print(f"\n  {i}. {rec['title']} by {rec['author']} "
@@ -193,18 +233,41 @@ def display_recommendations(recs: list[dict]) -> None:
 # ===================================================================
 # ORCHESTRATION
 # ===================================================================
-def generate_recommendations(user_prompt: str, prefs: dict) -> bool:
+def _filter_duplicates(recs: list[dict], already: list[str]) -> list[dict]:
+    """Remove recommendations whose titles have already been suggested."""
+    if not already:
+        return recs
+    seen = {title.strip().lower() for title in already}
+    filtered = [r for r in recs if r["title"].strip().lower() not in seen]
+    removed = len(recs) - len(filtered)
+    if removed:
+        logging.info("Removed %d duplicate(s) that were already recommended.", removed)
+    return filtered
+
+
+def generate_recommendations(
+    user_prompt: str,
+    prefs: dict,
+    already_recommended: list[str] | None = None,
+) -> list[dict] | None:
     """Run Layers 3-5: call LLM, parse, validate, and display.
-    Returns True on success, False if all attempts failed."""
+    Returns the list of recommendations on success, or None if all attempts failed.
+
+    *already_recommended* is a list of titles from previous rounds;
+    any duplicates are stripped from the result before display.
+    """
+    system_prompt = get_system_prompt()
+    already = already_recommended or []
+
     for attempt in range(1, MAX_RETRIES + 1):
-        print("Rummaging through the shelves...")
+        print(t("searching"))
 
         # Layer 3: LLM Call
-        raw = call_llm(SYSTEM_PROMPT, user_prompt)
+        raw = call_llm(system_prompt, user_prompt)
         if raw is None:
             logging.error("LLM call returned None on attempt %d", attempt)
             if attempt < MAX_RETRIES:
-                print("Something went wrong with the LLM. Retrying...")
+                print(t("retry_llm"))
                 continue
             break
 
@@ -213,7 +276,7 @@ def generate_recommendations(user_prompt: str, prefs: dict) -> bool:
         if parsed is None:
             logging.error("Parsing failed on attempt %d", attempt)
             if attempt < MAX_RETRIES:
-                print("Could not parse LLM response. Retrying...")
+                print(t("retry_parse"))
                 continue
             break
 
@@ -222,42 +285,65 @@ def generate_recommendations(user_prompt: str, prefs: dict) -> bool:
         if final is None:
             logging.error("Business validation failed on attempt %d", attempt)
             if attempt < MAX_RETRIES:
-                print("Those recommendations didn't pass my quality check. One more try...")
+                print(t("retry_validate"))
+                continue
+            break
+
+        # Layer 6: Duplicate Check — remove already-recommended titles
+        final = _filter_duplicates(final, already)
+        if not final:
+            logging.warning("All recommendations were duplicates on attempt %d", attempt)
+            if attempt < MAX_RETRIES:
                 continue
             break
 
         # Success!
         display_recommendations(final)
-        return True
+        return final
 
     # All attempts exhausted
-    print("\nSorry, BookBot couldn't generate valid recommendations right now.")
-    print("Please try again later.\n")
+    print(f"\n{t('fail_all')}")
+    print(f"{t('fail_later')}\n")
     logging.error("All attempts exhausted. No valid recommendations produced.")
-    return False
+    return None
 
 
 def main() -> None:
     """BookBot entry point."""
+    # --- Language Selection ---
+    select_language()
+    print()
+
     # --- Layer 1: Input Validation ---
     prefs = collect_preferences()
 
-    # --- Layer 2: Prompt Construction ---
-    user_prompt = build_user_prompt(prefs)
-    logging.info("User prompt:\n%s", user_prompt)
-
     # --- Generate, display, and offer more ---
-    while True:
-        success = generate_recommendations(user_prompt, prefs)
+    already_recommended: list[str] = []
 
-        if not success:
+    while True:
+        # --- Layer 2: Prompt Construction (rebuilt each round) ---
+        user_prompt = build_user_prompt(prefs, exclude=already_recommended or None)
+        logging.info("User prompt:\n%s", user_prompt)
+
+        recs = generate_recommendations(user_prompt, prefs, already_recommended)
+
+        if recs is None:
             break
 
-        # Ask if the user wants another round
-        answer = input("\nWould you like more recommendations? (yes/no): ").strip().lower()
-        if answer in ("yes", "y"):
-            print("\nGood choice! Let me dig up more...\n")
-            continue
-        else:
-            print("\nHappy reading! Come back any time you need a fresh stack :D")
+        # Track titles so the next round excludes them
+        already_recommended.extend(rec["title"] for rec in recs)
+
+        # Ask if the user wants another round (exact yes/no or 是/否)
+        while True:
+            answer = input(t("more_prompt")).strip()
+            if answer in ("yes", "是"):
+                print(t("more_yes"))
+                break
+            elif answer in ("no", "否"):
+                print(t("more_no"))
+                break
+            else:
+                print(t("more_invalid"))
+
+        if answer in ("no", "否"):
             break
