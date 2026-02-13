@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BookBot</title>
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #faf9f7;
+      --surface: #ffffff;
+      --text: #2c2c2c;
+      --text-muted: #6b6b6b;
+      --accent: #4f6d7a;
+      --accent-hover: #3d5563;
+      --accent-light: #e8eff2;
+      --border: #e2e0dd;
+      --radius: 10px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-lg: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── Layout ── */
+    .container {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+    }
+
+    /* ── Steps ── */
+    .step {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    .step.active { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .step-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .step h2 {
+      font-size: 1.35rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+
+    /* ── Progress bar ── */
+    .progress {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 32px;
+    }
+    .progress-dot {
+      height: 4px;
+      flex: 1;
+      border-radius: 2px;
+      background: var(--border);
+      transition: background 0.3s ease;
+    }
+    .progress-dot.filled { background: var(--accent); }
+
+    /* ── Cards / Buttons ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .lang-btn {
+      display: block;
+      width: 100%;
+      padding: 18px 24px;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 1.1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      margin-bottom: 12px;
+      text-align: left;
+    }
+    .lang-btn:hover {
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    /* ── Genre chips ── */
+    .genre-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .genre-chip {
+      padding: 10px 20px;
+      border: 2px solid var(--border);
+      border-radius: 99px;
+      background: var(--surface);
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+    .genre-chip:hover { border-color: var(--accent); }
+    .genre-chip.selected {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .chip-hint {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    /* ── Inputs ── */
+    .book-inputs {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .book-input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 1rem;
+      font-family: inherit;
+      transition: border-color 0.15s ease;
+      background: var(--surface);
+    }
+    .book-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .book-input::placeholder { color: #b5b3b0; }
+
+    .add-book-btn {
+      align-self: flex-start;
+      padding: 8px 16px;
+      background: none;
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .add-book-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .add-book-btn.hidden { display: none; }
+
+    /* ── Familiarity options ── */
+    .fam-option {
+      display: block;
+      width: 100%;
+      padding: 16px 20px;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      margin-bottom: 10px;
+      text-align: left;
+    }
+    .fam-option:hover { border-color: var(--accent); }
+    .fam-option.selected {
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
+    .fam-option .fam-label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 2px;
+    }
+    .fam-option .fam-desc {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+
+    /* ── Primary button ── */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 32px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: var(--surface);
+      color: var(--accent);
+      border: 2px solid var(--accent);
+      border-radius: var(--radius);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .btn-secondary:hover {
+      background: var(--accent-light);
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 24px;
+    }
+
+    /* ── Loading ── */
+    .loading {
+      text-align: center;
+      padding: 60px 0;
+    }
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-text {
+      color: var(--text-muted);
+      font-size: 1rem;
+    }
+
+    /* ── Results ── */
+    .rec-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-bottom: 14px;
+      box-shadow: var(--shadow);
+      transition: box-shadow 0.15s ease;
+    }
+    .rec-card:hover { box-shadow: var(--shadow-lg); }
+
+    .rec-num {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .rec-title {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .rec-meta {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 10px;
+    }
+    .rec-explanation {
+      font-size: 0.95rem;
+      line-height: 1.55;
+      color: var(--text);
+    }
+
+    /* ── Error ── */
+    .error-msg {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #b91c1c;
+      padding: 14px 18px;
+      border-radius: var(--radius);
+      font-size: 0.95rem;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .error-msg.visible { display: block; }
+
+    /* ── Responsive ── */
+    @media (max-width: 480px) {
+      .container { padding: 24px 16px 60px; }
+      header h1 { font-size: 1.6rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>BookBot</h1>
+      <p id="subtitle">Your personal book recommender</p>
+    </header>
+
+    <!-- Progress bar -->
+    <div class="progress" id="progress">
+      <div class="progress-dot" data-step="0"></div>
+      <div class="progress-dot" data-step="1"></div>
+      <div class="progress-dot" data-step="2"></div>
+      <div class="progress-dot" data-step="3"></div>
+    </div>
+
+    <div id="error" class="error-msg"></div>
+
+    <!-- Step 0: Language -->
+    <div class="step active" id="step-0">
+      <div class="step-label" id="s0-label">Step 1 of 4</div>
+      <h2 id="s0-title">Choose your language</h2>
+      <button class="lang-btn" onclick="pickLang('en')">English</button>
+      <button class="lang-btn" onclick="pickLang('zh')">中文</button>
+    </div>
+
+    <!-- Step 1: Genres -->
+    <div class="step" id="step-1">
+      <div class="step-label" id="s1-label">Step 2 of 4</div>
+      <h2 id="s1-title">Pick your genres</h2>
+      <p class="chip-hint" id="s1-hint">Select 1 to 3 genres</p>
+      <div class="genre-grid" id="genre-grid"></div>
+      <button class="btn-primary" id="genre-next" onclick="submitGenres()">Continue</button>
+    </div>
+
+    <!-- Step 2: Books -->
+    <div class="step" id="step-2">
+      <div class="step-label" id="s2-label">Step 3 of 4</div>
+      <h2 id="s2-title">Books you love</h2>
+      <p class="chip-hint" id="s2-hint">Enter 2 to 3 of your favorite books</p>
+      <div class="book-inputs" id="book-inputs">
+        <input class="book-input" type="text" placeholder="Book title..." maxlength="200">
+        <input class="book-input" type="text" placeholder="Book title..." maxlength="200">
+      </div>
+      <button class="add-book-btn" id="add-book" onclick="addBookInput()">+ Add another book</button>
+      <div class="btn-row">
+        <button class="btn-primary" onclick="submitBooks()">Continue</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Familiarity -->
+    <div class="step" id="step-3">
+      <div class="step-label" id="s3-label">Step 4 of 4</div>
+      <h2 id="s3-title">How adventurous are you?</h2>
+      <div id="fam-options"></div>
+      <div class="btn-row">
+        <button class="btn-primary" id="fam-next" onclick="submitFamiliarity()">Get recommendations</button>
+      </div>
+    </div>
+
+    <!-- Step 4: Loading -->
+    <div class="step" id="step-loading">
+      <div class="loading">
+        <div class="spinner"></div>
+        <p class="loading-text" id="loading-text">Searching the shelves...</p>
+      </div>
+    </div>
+
+    <!-- Step 5: Results -->
+    <div class="step" id="step-results">
+      <h2 id="results-title">Your recommendations</h2>
+      <div id="results-list"></div>
+      <div class="btn-row">
+        <button class="btn-primary" onclick="getMore()">More recommendations</button>
+        <button class="btn-secondary" onclick="startOver()">Start over</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // ── State ──
+  let lang = "en";
+  let genres = [];
+  let genreNames = {};   // { en: [...], zh: [...] }
+  let genreInternal = {}; // { en: { display: internal }, zh: ... }
+  let selectedGenres = [];
+  let books = [];
+  let familiarity = null;
+  let excluded = [];
+
+  // ── i18n ──
+  const TEXT = {
+    en: {
+      subtitle: "Your personal book recommender",
+      s0_label: "Step 1 of 4", s0_title: "Choose your language",
+      s1_label: "Step 2 of 4", s1_title: "Pick your genres",
+      s1_hint: "Select 1 to 3 genres",
+      s2_label: "Step 3 of 4", s2_title: "Books you love",
+      s2_hint: "Enter 2 to 3 of your favorite books",
+      s3_label: "Step 4 of 4", s3_title: "How adventurous are you?",
+      continue_btn: "Continue",
+      get_recs: "Get recommendations",
+      results_title: "Your recommendations",
+      more: "More recommendations",
+      start_over: "Start over",
+      loading: "Searching the shelves...",
+      placeholder: "Book title...",
+      add_book: "+ Add another book",
+      fam: [
+        { label: "Play it safe", desc: "Well-known classics and bestsellers" },
+        { label: "Mostly familiar", desc: "Classics with maybe one wild card" },
+        { label: "Half and half", desc: "A mix of familiar favorites and hidden gems" },
+        { label: "Surprise me!", desc: "Unexpected, lesser-known books" },
+      ],
+      err_genre: "Please select 1 to 3 genres.",
+      err_books: "Please enter 2 to 3 valid book titles.",
+      err_fam: "Please select a familiarity level.",
+      err_server: "Something went wrong. Please try again.",
+    },
+    zh: {
+      subtitle: "你的私人荐书助手",
+      s0_label: "第 1 步，共 4 步", s0_title: "选择语言",
+      s1_label: "第 2 步，共 4 步", s1_title: "选择你喜欢的类型",
+      s1_hint: "选择 1 到 3 个类型",
+      s2_label: "第 3 步，共 4 步", s2_title: "你喜爱的书",
+      s2_hint: "输入 2 到 3 本你喜欢的书",
+      s3_label: "第 4 步，共 4 步", s3_title: "你想要多大的冒险？",
+      continue_btn: "继续",
+      get_recs: "获取推荐",
+      results_title: "为你推荐",
+      more: "再来几本",
+      start_over: "重新开始",
+      loading: "正在翻阅书架...",
+      placeholder: "书名...",
+      add_book: "+ 再加一本",
+      fam: [
+        { label: "稳妥一点", desc: "经典和畅销书优先" },
+        { label: "基本稳妥", desc: "偶尔来个冷门" },
+        { label: "一半一半", desc: "一半熟悉一半新鲜" },
+        { label: "给我惊喜！", desc: "来点意外的冷门小众书" },
+      ],
+      err_genre: "请选择 1 到 3 个类型。",
+      err_books: "请输入 2 到 3 个有效书名。",
+      err_fam: "请选择一个熟悉程度。",
+      err_server: "出了点问题，请再试一次。",
+    }
+  };
+
+  function tt(key) { return TEXT[lang][key]; }
+
+  // ── Navigation ──
+  let currentStep = 0;
+
+  function showStep(n) {
+    document.querySelectorAll(".step").forEach(s => s.classList.remove("active"));
+    const target = (n === "loading") ? "step-loading"
+                 : (n === "results") ? "step-results"
+                 : `step-${n}`;
+    document.getElementById(target).classList.add("active");
+
+    // Update progress dots
+    const dots = document.querySelectorAll(".progress-dot");
+    dots.forEach((dot, i) => {
+      const step = typeof n === "number" ? n : (n === "loading" ? 4 : 4);
+      dot.classList.toggle("filled", i <= step - 1);
+    });
+
+    hideError();
+    currentStep = n;
+  }
+
+  function showError(msg) {
+    const el = document.getElementById("error");
+    el.textContent = msg;
+    el.classList.add("visible");
+  }
+
+  function hideError() {
+    document.getElementById("error").classList.remove("visible");
+  }
+
+  // ── Step 0: Language ──
+  async function pickLang(l) {
+    lang = l;
+    document.getElementById("subtitle").textContent = tt("subtitle");
+    document.documentElement.lang = l;
+
+    // Fetch genres from server
+    const res = await fetch("/api/genres");
+    const data = await res.json();
+    genreNames = { en: data.en, zh: data.zh };
+    genreInternal = data.internal;
+
+    renderGenres();
+    updateLabels();
+    showStep(1);
+  }
+
+  function updateLabels() {
+    document.getElementById("s1-label").textContent = tt("s1_label");
+    document.getElementById("s1-title").textContent = tt("s1_title");
+    document.getElementById("s1-hint").textContent = tt("s1_hint");
+    document.getElementById("s2-label").textContent = tt("s2_label");
+    document.getElementById("s2-title").textContent = tt("s2_title");
+    document.getElementById("s2-hint").textContent = tt("s2_hint");
+    document.getElementById("s3-label").textContent = tt("s3_label");
+    document.getElementById("s3-title").textContent = tt("s3_title");
+    document.getElementById("genre-next").textContent = tt("continue_btn");
+    document.getElementById("fam-next").textContent = tt("get_recs");
+    document.getElementById("results-title").textContent = tt("results_title");
+    document.getElementById("loading-text").textContent = tt("loading");
+    document.getElementById("add-book").textContent = tt("add_book");
+
+    // Update book placeholders
+    document.querySelectorAll(".book-input").forEach(inp => {
+      inp.placeholder = tt("placeholder");
+    });
+
+    renderFamOptions();
+  }
+
+  // ── Step 1: Genres ──
+  function renderGenres() {
+    const grid = document.getElementById("genre-grid");
+    grid.innerHTML = "";
+    selectedGenres = [];
+    const names = genreNames[lang] || genreNames.en;
+    names.forEach(name => {
+      const chip = document.createElement("button");
+      chip.className = "genre-chip";
+      chip.textContent = name;
+      chip.onclick = () => toggleGenre(chip, name);
+      grid.appendChild(chip);
+    });
+  }
+
+  function toggleGenre(chip, name) {
+    const idx = selectedGenres.indexOf(name);
+    if (idx >= 0) {
+      selectedGenres.splice(idx, 1);
+      chip.classList.remove("selected");
+    } else {
+      if (selectedGenres.length >= 3) return;
+      selectedGenres.push(name);
+      chip.classList.add("selected");
+    }
+  }
+
+  function submitGenres() {
+    if (selectedGenres.length < 1 || selectedGenres.length > 3) {
+      showError(tt("err_genre"));
+      return;
+    }
+    showStep(2);
+  }
+
+  // ── Step 2: Books ──
+  function addBookInput() {
+    const container = document.getElementById("book-inputs");
+    if (container.children.length >= 3) return;
+    const inp = document.createElement("input");
+    inp.className = "book-input";
+    inp.type = "text";
+    inp.placeholder = tt("placeholder");
+    inp.maxLength = 200;
+    container.appendChild(inp);
+    document.getElementById("add-book").classList.add("hidden");
+  }
+
+  function submitBooks() {
+    const inputs = document.querySelectorAll(".book-input");
+    books = [];
+    inputs.forEach(inp => {
+      const v = inp.value.trim();
+      if (v) books.push(v);
+    });
+    if (books.length < 2 || books.length > 3) {
+      showError(tt("err_books"));
+      return;
+    }
+    showStep(3);
+  }
+
+  // ── Step 3: Familiarity ──
+  function renderFamOptions() {
+    const container = document.getElementById("fam-options");
+    container.innerHTML = "";
+    familiarity = null;
+    const opts = tt("fam");
+    opts.forEach((opt, i) => {
+      const btn = document.createElement("button");
+      btn.className = "fam-option";
+      btn.innerHTML = `<span class="fam-label">${opt.label}</span><span class="fam-desc">${opt.desc}</span>`;
+      btn.onclick = () => pickFam(btn, i + 1);
+      container.appendChild(btn);
+    });
+  }
+
+  function pickFam(btn, level) {
+    document.querySelectorAll(".fam-option").forEach(b => b.classList.remove("selected"));
+    btn.classList.add("selected");
+    familiarity = level;
+  }
+
+  function submitFamiliarity() {
+    if (!familiarity) {
+      showError(tt("err_fam"));
+      return;
+    }
+    excluded = [];
+    fetchRecommendations();
+  }
+
+  // ── Fetch ──
+  async function fetchRecommendations() {
+    showStep("loading");
+
+    try {
+      const res = await fetch("/api/recommend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          language: lang,
+          genres: selectedGenres,
+          books: books,
+          familiarity: familiarity,
+          exclude: excluded,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        showError(data.error || tt("err_server"));
+        showStep(3);
+        return;
+      }
+
+      renderResults(data.recommendations);
+      showStep("results");
+    } catch (e) {
+      showError(tt("err_server"));
+      showStep(3);
+    }
+  }
+
+  // ── Results ──
+  function renderResults(recs) {
+    const list = document.getElementById("results-list");
+    list.innerHTML = "";
+    const labels = lang === "zh"
+      ? ["推荐", "作者", "年份"]
+      : ["Pick", "by", ""];
+
+    recs.forEach((rec, i) => {
+      const card = document.createElement("div");
+      card.className = "rec-card";
+      card.innerHTML = `
+        <div class="rec-num">${labels[0]} ${i + 1}</div>
+        <div class="rec-title">${esc(rec.title)}</div>
+        <div class="rec-meta">${esc(rec.author)} &middot; ${rec.publication_year}</div>
+        <div class="rec-explanation">${esc(rec.explanation)}</div>
+      `;
+      list.appendChild(card);
+      excluded.push(rec.title);
+    });
+  }
+
+  function getMore() {
+    fetchRecommendations();
+  }
+
+  function startOver() {
+    excluded = [];
+    selectedGenres = [];
+    books = [];
+    familiarity = null;
+
+    // Reset book inputs
+    const container = document.getElementById("book-inputs");
+    container.innerHTML = '';
+    for (let i = 0; i < 2; i++) {
+      const inp = document.createElement("input");
+      inp.className = "book-input";
+      inp.type = "text";
+      inp.placeholder = tt("placeholder");
+      inp.maxLength = 200;
+      container.appendChild(inp);
+    }
+    document.getElementById("add-book").classList.remove("hidden");
+
+    showStep(0);
+  }
+
+  // ── Utility ──
+  function esc(s) {
+    const d = document.createElement("div");
+    d.textContent = s;
+    return d.innerHTML;
+  }
+</script>
+</body>
+</html>
