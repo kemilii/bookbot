@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
     genres            TEXT    NOT NULL,   -- JSON array
     books             TEXT    NOT NULL,   -- JSON array
     familiarity       INTEGER NOT NULL CHECK(familiarity BETWEEN 1 AND 4),
+    frequency         TEXT    NOT NULL DEFAULT 'monthly' CHECK(frequency IN ('daily', 'weekly', 'monthly')),
     unsubscribe_token TEXT    NOT NULL UNIQUE,
     active            INTEGER NOT NULL DEFAULT 1,
     created_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -59,6 +60,15 @@ def init_db() -> None:
     """Create tables if they don't already exist."""
     with _connect() as conn:
         conn.executescript(_SCHEMA)
+        # Migrate: add frequency column to existing databases
+        try:
+            conn.execute(
+                "ALTER TABLE subscriptions ADD COLUMN frequency TEXT NOT NULL DEFAULT 'monthly' "
+                "CHECK(frequency IN ('daily', 'weekly', 'monthly'))"
+            )
+            logging.info("Migrated subscriptions table: added frequency column")
+        except sqlite3.OperationalError:
+            pass  # column already exists
     logging.info("Database initialised at %s", DB_PATH)
 
 
@@ -71,12 +81,16 @@ def add_subscription(
     genres: list[str],
     books: list[str],
     familiarity: int,
+    frequency: str = "monthly",
 ) -> str:
     """Insert a new subscription and return its unsubscribe token.
 
     If the email already exists and is active, raises ``ValueError``.
     If it exists but is inactive, reactivates it with the new preferences.
     """
+    if frequency not in ("daily", "weekly", "monthly"):
+        raise ValueError(f"Invalid frequency: {frequency}")
+
     token = uuid.uuid4().hex
     with _connect() as conn:
         # Check for existing row
@@ -92,13 +106,14 @@ def add_subscription(
                 """\
                 UPDATE subscriptions
                    SET language = ?, genres = ?, books = ?, familiarity = ?,
-                       unsubscribe_token = ?, active = 1
+                       frequency = ?, unsubscribe_token = ?, active = 1
                  WHERE id = ?""",
                 (
                     language,
                     json.dumps(genres),
                     json.dumps(books),
                     familiarity,
+                    frequency,
                     token,
                     row["id"],
                 ),
@@ -108,9 +123,9 @@ def add_subscription(
             conn.execute(
                 """\
                 INSERT INTO subscriptions
-                    (email, language, genres, books, familiarity, unsubscribe_token)
-                VALUES (?, ?, ?, ?, ?, ?)""",
-                (email, language, json.dumps(genres), json.dumps(books), familiarity, token),
+                    (email, language, genres, books, familiarity, frequency, unsubscribe_token)
+                VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (email, language, json.dumps(genres), json.dumps(books), familiarity, frequency, token),
             )
             logging.info("New subscription for %s", email)
     return token

@@ -468,7 +468,7 @@
     <!-- Step 0: Language -->
     <div class="step active" id="step-0">
       <div class="step-label" id="s0-label">Step 1 of 4</div>
-      <h2 id="s0-title">Choose your language</h2>
+      <h2 id="s0-title">Choose your language / 选择语言:</h2>
       <button class="lang-btn" onclick="pickLang('en')">English</button>
       <button class="lang-btn" onclick="pickLang('zh')">中文</button>
     </div>
@@ -534,20 +534,20 @@
       <div id="sub-success" class="success-msg"></div>
       <div id="sub-error" class="error-msg"></div>
 
-      <h2 id="sub-title">Monthly recommendations</h2>
-      <p class="sub-desc" id="sub-desc">Get personalized book picks delivered to your inbox every month.</p>
+      <h2 id="sub-title">Book recommendations</h2>
+      <p class="sub-desc" id="sub-desc">Get personalized book picks delivered to your inbox on your schedule.</p>
 
       <!-- Sub step 0: Language -->
       <div class="step active" id="sub-step-0">
-        <div class="step-label" id="ss0-label">Step 1 of 5</div>
-        <h2 id="ss0-title">Choose your language</h2>
+        <div class="step-label" id="ss0-label">Step 1 of 6</div>
+        <h2 id="ss0-title">Choose your language / 选择语言:</h2>
         <button class="lang-btn" onclick="subPickLang('en')">English</button>
         <button class="lang-btn" onclick="subPickLang('zh')">中文</button>
       </div>
 
       <!-- Sub step 1: Email -->
       <div class="step" id="sub-step-1">
-        <div class="step-label" id="ss1-label">Step 2 of 5</div>
+        <div class="step-label" id="ss1-label">Step 2 of 6</div>
         <div class="form-group">
           <label class="form-label" id="sub-email-label">Your email</label>
           <input class="form-input" type="email" id="sub-email" placeholder="you@example.com">
@@ -555,20 +555,31 @@
         <button class="btn-primary" onclick="subSubmitEmail()">Continue</button>
       </div>
 
-      <!-- Sub step 2: Genres -->
+      <!-- Sub step 2: Frequency -->
       <div class="step" id="sub-step-2">
-        <div class="step-label" id="ss2-label">Step 3 of 5</div>
-        <h2 id="ss2-title">Pick your genres</h2>
-        <p class="chip-hint" id="ss2-hint">Select 1 to 3 genres</p>
+        <div class="step-label" id="ss2-label">Step 3 of 6</div>
+        <h2 id="ss2-title">How often?</h2>
+        <p class="chip-hint" id="ss2-hint">Choose how frequently you'd like recommendations</p>
+        <div id="sub-freq-options"></div>
+        <div class="btn-row">
+          <button class="btn-primary" id="sub-freq-next" onclick="subSubmitFrequency()">Continue</button>
+        </div>
+      </div>
+
+      <!-- Sub step 3: Genres -->
+      <div class="step" id="sub-step-3">
+        <div class="step-label" id="ss3-label">Step 4 of 6</div>
+        <h2 id="ss3-title">Pick your genres</h2>
+        <p class="chip-hint" id="ss3-hint">Select 1 to 3 genres</p>
         <div class="genre-grid" id="sub-genre-grid"></div>
         <button class="btn-primary" id="sub-genre-next" onclick="subSubmitGenres()">Continue</button>
       </div>
 
-      <!-- Sub step 3: Books -->
-      <div class="step" id="sub-step-3">
-        <div class="step-label" id="ss3-label">Step 4 of 5</div>
-        <h2 id="ss3-title">Books you love</h2>
-        <p class="chip-hint" id="ss3-hint">Enter 2 to 3 of your favorite books</p>
+      <!-- Sub step 4: Books -->
+      <div class="step" id="sub-step-4">
+        <div class="step-label" id="ss4-label">Step 5 of 6</div>
+        <h2 id="ss4-title">Books you love</h2>
+        <p class="chip-hint" id="ss4-hint">Enter 2 to 3 of your favorite books</p>
         <div class="book-inputs" id="sub-book-inputs">
           <input class="book-input sub-book" type="text" placeholder="Book title..." maxlength="200">
           <input class="book-input sub-book" type="text" placeholder="Book title..." maxlength="200">
@@ -579,10 +590,10 @@
         </div>
       </div>
 
-      <!-- Sub step 4: Familiarity -->
-      <div class="step" id="sub-step-4">
-        <div class="step-label" id="ss4-label">Step 5 of 5</div>
-        <h2 id="ss4-title">How adventurous are you?</h2>
+      <!-- Sub step 5: Familiarity -->
+      <div class="step" id="sub-step-5">
+        <div class="step-label" id="ss5-label">Step 6 of 6</div>
+        <h2 id="ss5-title">How adventurous are you?</h2>
         <div id="sub-fam-options"></div>
         <div class="btn-row">
           <button class="btn-primary" id="sub-fam-next" onclick="subSubmitFamiliarity()">Subscribe</button>
@@ -616,7 +627,7 @@
   const TEXT = {
     en: {
       subtitle: "Your personal book recommender",
-      s0_label: "Step 1 of 4", s0_title: "Choose your language",
+      s0_label: "Step 1 of 4", s0_title: "Choose your language / 选择语言:",
       s1_label: "Step 2 of 4", s1_title: "Pick your genres",
       s1_hint: "Select 1 to 3 genres",
       s2_label: "Step 3 of 4", s2_title: "Books you love",
@@ -643,12 +654,12 @@
     },
     zh: {
       subtitle: "你的私人荐书助手",
-      s0_label: "第 1 步，共 4 步", s0_title: "选择语言",
+      s0_label: "第 1 步，共 4 步", s0_title: "Choose your language / 选择语言",
       s1_label: "第 2 步，共 4 步", s1_title: "选择你喜欢的类型",
       s1_hint: "选择 1 到 3 个类型",
       s2_label: "第 3 步，共 4 步", s2_title: "你喜爱的书",
       s2_hint: "输入 2 到 3 本你喜欢的书",
-      s3_label: "第 4 步，共 4 步", s3_title: "你想要多大的冒险？",
+      s3_label: "第 4 步，共 4 步", s3_title: "你偏向哪种推荐风格",
       continue_btn: "继续",
       get_recs: "获取推荐",
       results_title: "为你推荐",
@@ -970,18 +981,24 @@
   const SUB_TEXT = {
     en: {
       tab: "Subscribe",
-      title: "Monthly recommendations",
-      desc: "Get personalized book picks delivered to your inbox every month.",
-      ss0_label: "Step 1 of 5", ss0_title: "Choose your language",
-      ss1_label: "Step 2 of 5", email_label: "Your email", email_placeholder: "you@example.com",
-      ss2_label: "Step 3 of 5", ss2_title: "Pick your genres", ss2_hint: "Select 1 to 3 genres",
-      ss3_label: "Step 4 of 5", ss3_title: "Books you love", ss3_hint: "Enter 2 to 3 of your favorite books",
-      ss4_label: "Step 5 of 5", ss4_title: "How adventurous are you?",
+      title: "Book recommendations",
+      desc: "Get personalized book picks delivered to your inbox on your schedule.",
+      ss0_label: "Step 1 of 6", ss0_title: "Choose your language / 选择语言:",
+      ss1_label: "Step 2 of 6", email_label: "Your email", email_placeholder: "you@example.com",
+      ss2_label: "Step 3 of 6", ss2_title: "How often?", ss2_hint: "Choose how frequently you'd like recommendations",
+      ss3_label: "Step 4 of 6", ss3_title: "Pick your genres", ss3_hint: "Select 1 to 3 genres",
+      ss4_label: "Step 5 of 6", ss4_title: "Books you love", ss4_hint: "Enter 2 to 3 of your favorite books",
+      ss5_label: "Step 6 of 6", ss5_title: "How adventurous are you?",
       continue_btn: "Continue",
       subscribe_btn: "Subscribe",
       done_title: "You're subscribed!",
       placeholder: "Book title...",
       add_book: "+ Add another book",
+      freq: [
+        { value: "daily",   label: "Every day",   desc: "Fresh picks delivered daily" },
+        { value: "weekly",  label: "Every week",   desc: "New recommendations every Monday" },
+        { value: "monthly", label: "Every month",  desc: "A monthly digest on the 1st" },
+      ],
       fam: [
         { label: "Play it safe", desc: "Well-known classics and bestsellers" },
         { label: "Mostly familiar", desc: "Classics with maybe one wild card" },
@@ -989,6 +1006,7 @@
         { label: "Surprise me!", desc: "Unexpected, lesser-known books" },
       ],
       err_email: "Please enter a valid email address.",
+      err_freq: "Please choose a frequency.",
       err_genre: "Please select 1 to 3 genres.",
       err_books: "Please enter 2 to 3 valid book titles.",
       err_fam: "Please select a familiarity level.",
@@ -996,18 +1014,24 @@
     },
     zh: {
       tab: "订阅",
-      title: "每月推荐",
-      desc: "每月为你精选好书，每个月1号上午9点准时发到你的邮箱。",
-      ss0_label: "第 1 步，共 5 步", ss0_title: "选择语言",
-      ss1_label: "第 2 步，共 5 步", email_label: "你的邮箱", email_placeholder: "you@example.com",
-      ss2_label: "第 3 步，共 5 步", ss2_title: "选择你喜欢的类型", ss2_hint: "选择 1 到 3 个类型",
-      ss3_label: "第 4 步，共 5 步", ss3_title: "你喜爱的书", ss3_hint: "输入 2 到 3 本你喜欢的书",
-      ss4_label: "第 5 步，共 5 步", ss4_title: "你想要多大的冒险？",
+      title: "定期推荐",
+      desc: "按你选择的频率，精选好书发到你的邮箱。",
+      ss0_label: "第 1 步，共 6 步", ss0_title: "选择语言",
+      ss1_label: "第 2 步，共 6 步", email_label: "你的邮箱", email_placeholder: "you@example.com",
+      ss2_label: "第 3 步，共 6 步", ss2_title: "多久推一次？", ss2_hint: "选择你希望收到推荐的频率",
+      ss3_label: "第 4 步，共 6 步", ss3_title: "选择你喜欢的类型", ss3_hint: "选择 1 到 3 个类型",
+      ss4_label: "第 5 步，共 6 步", ss4_title: "你喜爱的书", ss4_hint: "输入 2 到 3 本你喜欢的书",
+      ss5_label: "第 6 步，共 6 步", ss5_title: "你偏向哪种推荐风格",
       continue_btn: "继续",
       subscribe_btn: "订阅",
       done_title: "订阅成功！",
       placeholder: "书名...",
       add_book: "+ 再加一本",
+      freq: [
+        { value: "daily",   label: "每天",   desc: "每天为你推荐新书" },
+        { value: "weekly",  label: "每周",   desc: "每周一发送推荐" },
+        { value: "monthly", label: "每月",   desc: "每月1号发送推荐" },
+      ],
       fam: [
         { label: "稳妥一点", desc: "经典和畅销书优先" },
         { label: "基本稳妥", desc: "偶尔来个冷门" },
@@ -1015,6 +1039,7 @@
         { label: "给我惊喜！", desc: "来点意外的冷门小众书" },
       ],
       err_email: "请输入有效的邮箱地址。",
+      err_freq: "请选择一个频率。",
       err_genre: "请选择 1 到 3 个类型。",
       err_books: "请输入 2 到 3 个有效书名。",
       err_fam: "请选择一个熟悉程度。",
@@ -1026,6 +1051,7 @@
 
   let subLang = "en";
   let subEmail = "";
+  let subFrequency = null;
   let subSelectedGenres = [];
   let subBooks = [];
   let subFamiliarity = null;
@@ -1063,6 +1089,10 @@
     document.getElementById("ss3-hint").textContent = st("ss3_hint");
     document.getElementById("ss4-label").textContent = st("ss4_label");
     document.getElementById("ss4-title").textContent = st("ss4_title");
+    document.getElementById("ss4-hint").textContent = st("ss4_hint");
+    document.getElementById("ss5-label").textContent = st("ss5_label");
+    document.getElementById("ss5-title").textContent = st("ss5_title");
+    document.getElementById("sub-freq-next").textContent = st("continue_btn");
     document.getElementById("sub-genre-next").textContent = st("continue_btn");
     document.getElementById("sub-fam-next").textContent = st("subscribe_btn");
     document.getElementById("sub-add-book").textContent = st("add_book");
@@ -1084,6 +1114,7 @@
       genreInternal = data.internal;
     }
 
+    renderSubFreqOptions();
     renderSubGenres();
     renderSubFamOptions();
     updateSubLabels();
@@ -1103,7 +1134,36 @@
     showSubStep(2);
   }
 
-  // Sub step 2: genres
+  // Sub step 2: frequency
+  function renderSubFreqOptions() {
+    const container = document.getElementById("sub-freq-options");
+    container.innerHTML = "";
+    subFrequency = null;
+    const opts = st("freq");
+    opts.forEach((opt) => {
+      const btn = document.createElement("button");
+      btn.className = "fam-option";
+      btn.innerHTML = `<span class="fam-label">${opt.label}</span><span class="fam-desc">${opt.desc}</span>`;
+      btn.onclick = () => pickSubFreq(btn, opt.value);
+      container.appendChild(btn);
+    });
+  }
+
+  function pickSubFreq(btn, value) {
+    document.querySelectorAll("#sub-freq-options .fam-option").forEach(b => b.classList.remove("selected"));
+    btn.classList.add("selected");
+    subFrequency = value;
+  }
+
+  function subSubmitFrequency() {
+    if (!subFrequency) {
+      showSubError(st("err_freq"));
+      return;
+    }
+    showSubStep(3);
+  }
+
+  // Sub step 3: genres
   function renderSubGenres() {
     const grid = document.getElementById("sub-genre-grid");
     grid.innerHTML = "";
@@ -1135,10 +1195,10 @@
       showSubError(st("err_genre"));
       return;
     }
-    showSubStep(3);
+    showSubStep(4);
   }
 
-  // Sub step 3: books
+  // Sub step 4: books
   function subAddBookInput() {
     const container = document.getElementById("sub-book-inputs");
     if (container.children.length >= 3) return;
@@ -1162,10 +1222,10 @@
       showSubError(st("err_books"));
       return;
     }
-    showSubStep(4);
+    showSubStep(5);
   }
 
-  // Sub step 4: familiarity
+  // Sub step 5: familiarity
   function renderSubFamOptions() {
     const container = document.getElementById("sub-fam-options");
     container.innerHTML = "";
@@ -1200,6 +1260,7 @@
         body: JSON.stringify({
           email: subEmail,
           language: subLang,
+          frequency: subFrequency,
           genres: subSelectedGenres,
           books: subBooks,
           familiarity: subFamiliarity,
