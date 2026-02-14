@@ -31,6 +31,21 @@ from bookbot.scheduler import start_scheduler
 app = Flask(__name__)
 
 # ---------------------------------------------------------------------------
+# One-time initialisation (runs before the first request under gunicorn)
+# ---------------------------------------------------------------------------
+_initialised = False
+
+
+@app.before_request
+def _ensure_initialised():
+    global _initialised
+    if not _initialised:
+        init_db()
+        start_scheduler()
+        _initialised = True
+
+
+# ---------------------------------------------------------------------------
 # Constants (mirrored from cli.py for web-side validation)
 # ---------------------------------------------------------------------------
 MAX_STRING_LENGTH = 200
