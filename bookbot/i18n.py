@@ -140,13 +140,14 @@ STRINGS: dict[str, dict[str, str]] = {
 
         # Subscription
         "sub_tab":          "Subscribe",
-        "sub_title":        "Monthly recommendations",
-        "sub_desc":         "Get personalized book picks delivered to your inbox every month.",
+        "sub_title":        "Book recommendations",
+        "sub_desc":         "Get personalized book picks delivered to your inbox on your schedule.",
         "sub_email_label":  "Your email",
         "sub_email_placeholder": "you@example.com",
         "sub_email_invalid": "Please enter a valid email address.",
+        "sub_freq_invalid": "Please choose a valid frequency (daily, weekly, or monthly).",
         "sub_submit":       "Subscribe",
-        "sub_success":      "You're subscribed! Monthly recommendations will be sent to {email}.",
+        "sub_success":      "You're subscribed! Recommendations will be sent to {email}.",
         "sub_already":      "This email is already subscribed.",
     },
 
@@ -179,7 +180,7 @@ STRINGS: dict[str, dict[str, str]] = {
         "book_invalid":     "嗯，这些看起来不像真正的书名: {bad}。书名应包含实际文字且不超过 {max_len} 个字符。",
 
         # Familiarity prompts
-        "fam_header":       "你今天想冒险到什么程度？",
+        "fam_header":       "你偏向哪种推荐风格",
         "fam_1":            "  1 = 稳妥一点，经典和畅销书优先",
         "fam_2":            "  2 = 基本稳妥，偶尔来个冷门",
         "fam_3":            "  3 = 一半熟悉一半新鲜",
@@ -204,13 +205,14 @@ STRINGS: dict[str, dict[str, str]] = {
 
         # Subscription
         "sub_tab":          "订阅",
-        "sub_title":        "每月推荐",
-        "sub_desc":         "每月为你精选好书，直接发到你的邮箱。",
+        "sub_title":        "定期推荐",
+        "sub_desc":         "按你选择的频率，精选好书发到你的邮箱。",
         "sub_email_label":  "你的邮箱",
         "sub_email_placeholder": "you@example.com",
         "sub_email_invalid": "请输入有效的邮箱地址。",
+        "sub_freq_invalid": "请选择有效的频率（每天、每周或每月）。",
         "sub_submit":       "订阅",
-        "sub_success":      "订阅成功！每月推荐将发送到 {email}。",
+        "sub_success":      "订阅成功！推荐将发送到 {email}。",
         "sub_already":      "这个邮箱已经订阅了。",
     },
 }

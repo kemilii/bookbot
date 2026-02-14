@@ -192,9 +192,12 @@ def api_recommend():
 _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
+_VALID_FREQUENCIES = ("daily", "weekly", "monthly")
+
+
 @app.route("/api/subscribe", methods=["POST"])
 def api_subscribe():
-    """Subscribe to monthly recommendations.
+    """Subscribe to scheduled recommendations.
 
     Expected JSON body:
     {
@@ -202,7 +205,8 @@ def api_subscribe():
         "language": "en" | "zh",
         "genres": ["science fiction", "fantasy"],
         "books": ["Book One", "Book Two"],
-        "familiarity": 1-4
+        "familiarity": 1-4,
+        "frequency": "daily" | "weekly" | "monthly"
     }
     """
     data = request.get_json(silent=True)
@@ -219,6 +223,11 @@ def api_subscribe():
     if lang not in ("en", "zh"):
         return jsonify({"error": "Unsupported language"}), 400
     set_language(lang)
+
+    # --- Frequency ---
+    frequency = data.get("frequency", "monthly")
+    if frequency not in _VALID_FREQUENCIES:
+        return jsonify({"error": t("sub_freq_invalid")}), 400
 
     # --- Genres ---
     genres_raw = data.get("genres", [])
@@ -257,11 +266,11 @@ def api_subscribe():
 
     # --- Persist ---
     try:
-        token = add_subscription(email, lang, internal_genres, books, familiarity)
+        token = add_subscription(email, lang, internal_genres, books, familiarity, frequency)
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 409
 
-    logging.info("Subscription created for %s", email)
+    logging.info("Subscription created for %s (frequency=%s)", email, frequency)
     return jsonify({"message": t("sub_success", email=email), "token": token}), 201
 
 
