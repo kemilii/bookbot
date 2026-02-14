@@ -264,6 +264,21 @@
       background: var(--accent-light);
     }
 
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 12px 20px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: color 0.15s ease;
+    }
+    .btn-back:hover { color: var(--text); }
+
     .btn-row {
       display: flex;
       gap: 12px;
@@ -498,6 +513,7 @@
       </div>
       <button class="add-book-btn" id="add-book" onclick="addBookInput()">+ Add another book</button>
       <div class="btn-row">
+        <button class="btn-back" onclick="showStep(0)" id="back-1">&larr; Back</button>
         <button class="btn-primary" onclick="submitBooks()">Continue</button>
       </div>
     </div>
@@ -508,6 +524,7 @@
       <h2 id="s2-title">How adventurous are you?</h2>
       <div id="fam-options"></div>
       <div class="btn-row">
+        <button class="btn-back" onclick="showStep(1)" id="back-2">&larr; Back</button>
         <button class="btn-primary" id="fam-next" onclick="submitFamiliarity()">Get recommendations</button>
       </div>
     </div>
@@ -559,6 +576,7 @@
         <p class="chip-hint" id="ss1-hint">Choose how frequently you'd like recommendations</p>
         <div id="sub-freq-options"></div>
         <div class="btn-row">
+          <button class="btn-back" onclick="showSubStep(0)" id="sub-back-1">&larr; Back</button>
           <button class="btn-primary" id="sub-freq-next" onclick="subSubmitFrequency()">Continue</button>
         </div>
       </div>
@@ -569,7 +587,10 @@
         <h2 id="ss2-title">Pick your genres</h2>
         <p class="chip-hint" id="ss2-hint">Select 1 to 3 genres</p>
         <div class="genre-grid" id="sub-genre-grid"></div>
-        <button class="btn-primary" id="sub-genre-next" onclick="subSubmitGenres()">Continue</button>
+        <div class="btn-row">
+          <button class="btn-back" onclick="showSubStep(1)" id="sub-back-2">&larr; Back</button>
+          <button class="btn-primary" id="sub-genre-next" onclick="subSubmitGenres()">Continue</button>
+        </div>
       </div>
 
       <!-- Sub step 3: Books -->
@@ -583,6 +604,7 @@
         </div>
         <button class="add-book-btn" id="sub-add-book" onclick="subAddBookInput()">+ Add another book</button>
         <div class="btn-row">
+          <button class="btn-back" onclick="showSubStep(2)" id="sub-back-3">&larr; Back</button>
           <button class="btn-primary" onclick="subSubmitBooks()">Continue</button>
         </div>
       </div>
@@ -593,6 +615,7 @@
         <h2 id="ss4-title">How adventurous are you?</h2>
         <div id="sub-fam-options"></div>
         <div class="btn-row">
+          <button class="btn-back" onclick="showSubStep(3)" id="sub-back-4">&larr; Back</button>
           <button class="btn-primary" id="sub-fam-next" onclick="subSubmitFamiliarity()">Subscribe</button>
         </div>
       </div>
@@ -630,6 +653,7 @@
       s1_label: "Step 2 of 3", s1_title: "Books you love",
       s1_hint: "Enter 2 to 3 of your favorite books",
       s2_label: "Step 3 of 3", s2_title: "How adventurous are you?",
+      back_btn: "&larr; Back",
       continue_btn: "Continue",
       get_recs: "Get recommendations",
       results_title: "Your recommendations",
@@ -656,6 +680,7 @@
       s1_label: "第 2 步，共 3 步", s1_title: "你喜爱的书",
       s1_hint: "输入 2 到 3 本你喜欢的书",
       s2_label: "第 3 步，共 3 步", s2_title: "你偏向哪种推荐风格？",
+      back_btn: "&larr; 返回",
       continue_btn: "继续",
       get_recs: "获取推荐",
       results_title: "为你推荐",
@@ -690,6 +715,7 @@
       ss2_label: "Step 3 of 5", ss2_title: "Pick your genres", ss2_hint: "Select 1 to 3 genres",
       ss3_label: "Step 4 of 5", ss3_title: "Books you love", ss3_hint: "Enter 2 to 3 of your favorite books",
       ss4_label: "Step 5 of 5", ss4_title: "How adventurous are you?",
+      back_btn: "&larr; Back",
       continue_btn: "Continue",
       subscribe_btn: "Subscribe",
       done_title: "You're subscribed!",
@@ -718,10 +744,11 @@
       title: "定期推荐",
       desc: "按你选择的频率，精选好书发到你的邮箱。",
       ss0_label: "第 1 步，共 5 步", email_label: "你的邮箱", email_placeholder: "you@example.com",
-      ss1_label: "第 2 步，共 5 步", ss1_title: "多久推一次？", ss1_hint: "选择你希望收到推荐的频率",
+      ss1_label: "第 2 步，共 5 步", ss1_title: "选择你想要的订阅频率", ss1_hint: "选择你希望收到邮件推荐的频率",
       ss2_label: "第 3 步，共 5 步", ss2_title: "选择你喜欢的类型", ss2_hint: "选择 1 到 3 个类型",
       ss3_label: "第 4 步，共 5 步", ss3_title: "你喜爱的书", ss3_hint: "输入 2 到 3 本你喜欢的书",
       ss4_label: "第 5 步，共 5 步", ss4_title: "你偏向哪种推荐风格？",
+      back_btn: "&larr; 返回",
       continue_btn: "继续",
       subscribe_btn: "订阅",
       done_title: "订阅成功！",
@@ -838,6 +865,8 @@
     document.querySelectorAll("#book-inputs .book-input").forEach(inp => {
       inp.placeholder = tt("placeholder");
     });
+    document.getElementById("back-1").innerHTML = tt("back_btn");
+    document.getElementById("back-2").innerHTML = tt("back_btn");
   }
 
   // ── Step 0: Genres ──
@@ -1102,6 +1131,10 @@
     document.querySelectorAll(".sub-book").forEach(inp => {
       inp.placeholder = st("placeholder");
     });
+    document.getElementById("sub-back-1").innerHTML = st("back_btn");
+    document.getElementById("sub-back-2").innerHTML = st("back_btn");
+    document.getElementById("sub-back-3").innerHTML = st("back_btn");
+    document.getElementById("sub-back-4").innerHTML = st("back_btn");
   }
 
   // Sub step 0: email
