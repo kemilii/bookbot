@@ -7,7 +7,7 @@ import sys
 _handlers: list[logging.Handler] = [logging.StreamHandler(sys.stdout)]
 
 # Also log to a file when running locally (not on Fly.io)
-if not os.environ.get("FLY_APP_NAME"):
+if not os.environ.get("RENDER"):
     _handlers.append(logging.FileHandler("bookbot.log"))
 
 logging.basicConfig(
