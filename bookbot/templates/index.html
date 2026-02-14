@@ -520,7 +520,7 @@
       <button class="add-book-btn" id="add-book" onclick="addBookInput()">+ Add another book</button>
       <div class="btn-row">
         <button class="btn-back" onclick="showStep(0)" id="back-1">&larr; Back</button>
-        <button class="btn-primary" onclick="submitBooks()">Continue</button>
+        <button class="btn-primary" id="books-next" onclick="submitBooks()">Continue</button>
       </div>
     </div>
 
@@ -572,7 +572,7 @@
           <label class="form-label" id="sub-email-label">Your email</label>
           <input class="form-input" type="email" id="sub-email" placeholder="you@example.com">
         </div>
-        <button class="btn-primary" onclick="subSubmitEmail()">Continue</button>
+        <button class="btn-primary" id="sub-email-next" onclick="subSubmitEmail()">Continue</button>
       </div>
 
       <!-- Sub step 1: Frequency -->
@@ -611,7 +611,7 @@
         <button class="add-book-btn" id="sub-add-book" onclick="subAddBookInput()">+ Add another book</button>
         <div class="btn-row">
           <button class="btn-back" onclick="showSubStep(2)" id="sub-back-3">&larr; Back</button>
-          <button class="btn-primary" onclick="subSubmitBooks()">Continue</button>
+          <button class="btn-primary" id="sub-books-next" onclick="subSubmitBooks()">Continue</button>
         </div>
       </div>
 
@@ -863,6 +863,7 @@
     document.getElementById("s2-label").textContent = tt("s2_label");
     document.getElementById("s2-title").textContent = tt("s2_title");
     document.getElementById("genre-next").textContent = tt("continue_btn");
+    document.getElementById("books-next").textContent = tt("continue_btn");
     document.getElementById("fam-next").textContent = tt("get_recs");
     document.getElementById("results-title").textContent = tt("results_title");
     document.getElementById("loading-text").textContent = tt("loading");
@@ -1130,8 +1131,10 @@
     document.getElementById("ss3-hint").textContent = st("ss3_hint");
     document.getElementById("ss4-label").textContent = st("ss4_label");
     document.getElementById("ss4-title").textContent = st("ss4_title");
+    document.getElementById("sub-email-next").textContent = st("continue_btn");
     document.getElementById("sub-freq-next").textContent = st("continue_btn");
     document.getElementById("sub-genre-next").textContent = st("continue_btn");
+    document.getElementById("sub-books-next").textContent = st("continue_btn");
     document.getElementById("sub-fam-next").textContent = st("subscribe_btn");
     document.getElementById("sub-add-book").textContent = st("add_book");
     document.querySelectorAll(".sub-book").forEach(inp => {
