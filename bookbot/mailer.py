@@ -22,20 +22,28 @@ EMAIL_FROM = os.getenv("EMAIL_FROM", SMTP_USER)
 BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:8000")
 
 
-def _build_html(recs: list[dict], language: str, unsubscribe_url: str) -> str:
-    """Render an HTML email body for the monthly recommendations."""
+def _build_html(recs: list[dict], language: str, unsubscribe_url: str, frequency: str = "monthly") -> str:
+    """Render an HTML email body for recommendations."""
     is_zh = language == "zh"
 
+    freq_labels = {
+        "daily":   {"en": "Daily",   "zh": "每日"},
+        "weekly":  {"en": "Weekly",  "zh": "每周"},
+        "monthly": {"en": "Monthly", "zh": "每月"},
+    }
+    freq_intros = {
+        "daily":   {"en": "Here are your BookBot picks for today:",   "zh": "这是 BookBot 为你精选的今日书单："},
+        "weekly":  {"en": "Here are your BookBot picks for this week:", "zh": "这是 BookBot 为你精选的本周书单："},
+        "monthly": {"en": "Here are your BookBot picks for this month:", "zh": "这是 BookBot 为你精选的本月书单："},
+    }
+    freq_label = freq_labels.get(frequency, freq_labels["monthly"])["zh" if is_zh else "en"]
+
     greeting = "Hi there!" if not is_zh else "你好！"
-    intro = (
-        "Here are your BookBot picks for this month:"
-        if not is_zh
-        else "这是 BookBot 为你精选的本月书单："
-    )
+    intro = freq_intros.get(frequency, freq_intros["monthly"])["zh" if is_zh else "en"]
     footer_text = (
-        "You received this because you subscribed to BookBot monthly recommendations."
+        f"You received this because you subscribed to BookBot {freq_label.lower()} recommendations."
         if not is_zh
-        else "你收到此邮件是因为你订阅了 BookBot 的每月推荐。"
+        else f"你收到此邮件是因为你订阅了 BookBot 的{freq_label}推荐。"
     )
     unsub_text = "Unsubscribe" if not is_zh else "取消订阅"
     by_text = "by" if not is_zh else "作者："
@@ -89,7 +97,7 @@ def _build_html(recs: list[dict], language: str, unsubscribe_url: str) -> str:
             <td style="padding:32px 24px 16px;text-align:center;">
               <div style="font-size:24px;font-weight:700;color:#2c2c2c;letter-spacing:-0.02em;">BookBot</div>
               <div style="font-size:15px;color:#6b6b6b;margin-top:4px;">
-                {"Monthly Recommendations" if not is_zh else "每月推荐"}
+                {f"{freq_label} Recommendations" if not is_zh else f"{freq_label}推荐"}
               </div>
             </td>
           </tr>
@@ -123,8 +131,9 @@ def send_recommendations_email(
     recs: list[dict],
     language: str,
     unsubscribe_token: str,
+    frequency: str = "monthly",
 ) -> bool:
-    """Send a monthly recommendation email.
+    """Send a recommendation email.
 
     Returns True on success, False on failure.
     """
@@ -132,12 +141,13 @@ def send_recommendations_email(
         logging.error("SMTP credentials not configured — skipping email to %s", to_email)
         return False
 
+    freq_subjects = {
+        "daily":   {"en": "Your Daily BookBot Recommendations",   "zh": "BookBot 每日推荐书单"},
+        "weekly":  {"en": "Your Weekly BookBot Recommendations",  "zh": "BookBot 每周推荐书单"},
+        "monthly": {"en": "Your Monthly BookBot Recommendations", "zh": "BookBot 每月推荐书单"},
+    }
     unsubscribe_url = f"{BASE_URL}/api/unsubscribe/{unsubscribe_token}"
-    subject = (
-        "Your Monthly BookBot Recommendations"
-        if language != "zh"
-        else "BookBot 每月推荐书单"
-    )
+    subject = freq_subjects.get(frequency, freq_subjects["monthly"])["zh" if language == "zh" else "en"]
 
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
@@ -145,7 +155,7 @@ def send_recommendations_email(
     msg["To"] = to_email
     msg["List-Unsubscribe"] = f"<{unsubscribe_url}>"
 
-    html_body = _build_html(recs, language, unsubscribe_url)
+    html_body = _build_html(recs, language, unsubscribe_url, frequency)
     msg.attach(MIMEText(html_body, "html", "utf-8"))
 
     try:

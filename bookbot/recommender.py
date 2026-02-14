@@ -15,7 +15,7 @@ client = OpenAI()
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
-MAX_RETRIES = 3  # total LLM attempts before giving up
+MAX_RETRIES = 1  # single attempt per call; outer callers handle retries
 
 FAMILIARITY_MAP = {
     1: "very familiar, well-known classics and bestsellers",

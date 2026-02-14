@@ -132,6 +132,7 @@ def send_scheduled_recommendations() -> None:
             recs=recs,
             language=sub["language"],
             unsubscribe_token=sub["unsubscribe_token"],
+            frequency=freq,
         )
 
         if sent:
@@ -165,17 +166,18 @@ def start_scheduler() -> None:
         return
 
     _scheduler = BackgroundScheduler(daemon=True)
-    # Run every day at 09:00 UTC
+    # Run every day at 14:30 Beijing time (Asia/Shanghai)
     _scheduler.add_job(
         send_scheduled_recommendations,
         trigger="cron",
-        hour=9,
-        minute=0,
+        hour=14,
+        minute=33,
+        timezone="Asia/Shanghai",
         id="scheduled_recommendations",
         replace_existing=True,
     )
     _scheduler.start()
-    logging.info("Scheduler started — daily job registered at 09:00 UTC")
+    logging.info("Scheduler started — daily job at 14:30 Beijing time")
 
 
 def stop_scheduler() -> None:

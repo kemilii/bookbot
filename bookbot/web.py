@@ -12,9 +12,7 @@ from bookbot.database import (
 )
 from bookbot.i18n import (
     set_language,
-    get_language,
     t,
-    genre_display_names,
     lookup_genre,
     GENRE_DISPLAY,
 )

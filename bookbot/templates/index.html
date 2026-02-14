@@ -548,8 +548,8 @@
       <h2 id="results-title">Your recommendations</h2>
       <div id="results-list"></div>
       <div class="btn-row">
-        <button class="btn-primary" onclick="getMore()">More recommendations</button>
-        <button class="btn-secondary" onclick="startOver()">Start over</button>
+        <button class="btn-primary" id="btn-more" onclick="getMore()">More recommendations</button>
+        <button class="btn-secondary" id="btn-start-over" onclick="startOver()">Start over</button>
       </div>
     </div>
 
@@ -866,6 +866,8 @@
     document.getElementById("books-next").textContent = tt("continue_btn");
     document.getElementById("fam-next").textContent = tt("get_recs");
     document.getElementById("results-title").textContent = tt("results_title");
+    document.getElementById("btn-more").textContent = tt("more");
+    document.getElementById("btn-start-over").textContent = tt("start_over");
     document.getElementById("loading-text").textContent = tt("loading");
     document.getElementById("add-book").textContent = tt("add_book");
 
@@ -1066,6 +1068,7 @@
     document.getElementById("add-book").classList.remove("hidden");
 
     renderGenres();
+    renderFamOptions();
     showStep(0);
   }
 
